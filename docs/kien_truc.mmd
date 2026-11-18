@@ -1,0 +1,39 @@
+flowchart LR
+  subgraph SRC["Nguồn dữ liệu"]
+    NEO["NEO API<br/>WebSocket (liên tục)<br/>REST (đầu/cuối ngày, ≤5 req/s)"]
+    SSI["SSI FastConnect<br/>(bổ trợ: lịch sử, nếu cần)"]
+  end
+  subgraph COL["1. Thu thập  (neo_api/, data/collector)"]
+    MAP["Ánh xạ trường +<br/>gộp tin từng phần"]
+    QC["Kiểm tra chất lượng<br/>(trùng, chéo sổ, ngoài biên, trễ...)"]
+    SAMP["Lấy mẫu theo<br/>thời gian sự kiện"]
+  end
+  DB[("2. Lưu trữ<br/>SQLite WAL<br/>snapshots · quality_log<br/>status · picks bất biến")]
+  subgraph LOGIC["3. Logic tài chính  (finance/)"]
+    EXE["execution.py<br/>duyệt sổ lệnh 3 mức<br/>trượt giá, chi phí vòng"]
+    MIC["microstructure.py<br/>spread, OBI, Parkinson"]
+  end
+  subgraph ANA["4. Phân tích  (analytics/)"]
+    FEAT["features.py<br/>yếu tố + thống kê chi phí<br/>(chỉ dùng dữ liệu ≤ as_of)"]
+    SCORE["scoring.py<br/>bộ lọc cứng → điểm yếu tố<br/>→ điểm ròng sau chi phí"]
+    SENS["sensitivity.py<br/>độ nhạy trọng số"]
+    FWD["forward_test.py<br/>chốt bất biến → đánh giá<br/>so với ngẫu nhiên"]
+  end
+  UI["5. Giao diện FastAPI + Jinja2<br/>Xếp hạng · Chi tiết mã · Forward-test<br/>Chất lượng dữ liệu · Phương pháp"]
+  USER(["Người dùng<br/>nhập vốn, trọng số"])
+  CFG[/"config/screener.yaml"/]
+  AI["AI tùy chọn<br/>NL → JSON tham số<br/>(kiểm schema, người dùng xác nhận)"]
+  NEO --> MAP --> QC --> SAMP --> DB
+  SSI -.-> DB
+  DB --> FEAT
+  EXE --> FEAT
+  MIC --> FEAT
+  FEAT --> SCORE --> UI
+  SCORE --> SENS
+  SCORE --> FWD
+  DB --> FWD
+  FWD --> UI
+  CFG --> FEAT
+  CFG --> SCORE
+  AI -.-> CFG
+  USER <--> UI

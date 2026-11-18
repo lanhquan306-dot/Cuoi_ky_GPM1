@@ -1,0 +1,307 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ title }}</title>
+  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #172033;
+      --muted: #667085;
+      --line: #e4e9f0;
+      --surface: #fff;
+      --canvas: #f4f7fb;
+      --blue: #1769aa;
+      --blue-dark: #104c7b;
+      --red: #a4262c;
+      --green: #18794e;
+      font-family: Inter, "Segoe UI", Arial, sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--canvas); color: var(--ink); }
+    header { background: linear-gradient(120deg, #10243b, #1769aa); color: white; padding: 28px max(24px, calc((100% - 1440px) / 2)); }
+    header h1 { margin: 0 0 8px; font-size: clamp(1.55rem, 3vw, 2.2rem); }
+    header p { margin: 0; max-width: 900px; color: #e4effa; line-height: 1.55; }
+    .wrap { max-width: 1440px; margin: auto; padding: 22px 24px 60px; }
+    .notice { padding: 13px 16px; border-radius: 9px; margin: 0 0 16px; line-height: 1.5; }
+    .notice.info { background: #e8f2fc; border: 1px solid #c7def3; }
+    .notice.warn { background: #fff4d6; border: 1px solid #f3d37d; }
+    .notice.error { background: #fde9e8; border: 1px solid #f3b4b1; color: #742a27; }
+    .panel { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 20px; margin: 0 0 18px; box-shadow: 0 2px 8px #1c35500a; }
+    h2 { margin: 0 0 14px; font-size: 1.35rem; }
+    h3 { margin: 20px 0 10px; font-size: 1.05rem; }
+    .settings { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px 18px; align-items: end; }
+    label { display: block; font-size: .9rem; font-weight: 650; color: #344054; }
+    input, select, button { font: inherit; }
+    input[type="number"], input[type="date"], input[type="time"], input[type="text"], select:not([multiple]) {
+      width: 100%; margin-top: 6px; min-height: 40px; padding: 8px 10px; border: 1px solid #cbd4df; border-radius: 7px; background: white; color: var(--ink);
+    }
+    select[multiple] { width: 100%; min-height: 110px; margin-top: 6px; border: 1px solid #cbd4df; border-radius: 7px; padding: 5px; }
+    input[type="range"] { width: 100%; accent-color: var(--blue); }
+    output { float: right; color: var(--blue-dark); font-variant-numeric: tabular-nums; }
+    .factor-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 10px 18px; }
+    .factor { padding: 9px 11px; border: 1px solid var(--line); border-radius: 8px; }
+    .actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; }
+    button { border: 0; border-radius: 7px; background: var(--blue); color: white; padding: 10px 15px; font-weight: 700; cursor: pointer; }
+    button:hover { background: var(--blue-dark); }
+    button.secondary { background: #e9eef5; color: #24364b; }
+    button.secondary:hover { background: #dce5ef; }
+    .check { display: flex; gap: 8px; align-items: center; margin-top: 11px; font-weight: 500; }
+    .check input { accent-color: var(--blue); }
+    nav { position: sticky; top: 0; z-index: 4; display: flex; gap: 6px; overflow-x: auto; padding: 10px 0; background: var(--canvas); }
+    nav a { white-space: nowrap; text-decoration: none; color: #31516d; background: white; border: 1px solid var(--line); padding: 9px 12px; border-radius: 20px; font-size: .9rem; }
+    nav a:hover { background: #e8f2fc; }
+    .metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin: 12px 0; }
+    .metric { padding: 14px; border: 1px solid var(--line); border-radius: 9px; background: #fbfcfe; }
+    .metric span { display: block; color: var(--muted); font-size: .82rem; margin-bottom: 6px; }
+    .metric strong { font-size: 1.25rem; font-variant-numeric: tabular-nums; }
+    .table-wrap { width: 100%; overflow-x: auto; border: 1px solid var(--line); border-radius: 8px; }
+    table { border-collapse: collapse; width: 100%; font-size: .88rem; }
+    th, td { padding: 9px 11px; border-bottom: 1px solid var(--line); text-align: left; white-space: nowrap; }
+    th { background: #f1f5f9; color: #344054; position: sticky; top: 0; }
+    tbody tr:hover { background: #f8fbff; }
+    .chart { width: 100%; min-height: 280px; }
+    .muted { color: var(--muted); }
+    .mock-banner { padding: 12px 15px; background: #fde9e8; color: #842626; border: 1px solid #f3b4b1; border-radius: 8px; font-weight: 700; margin-bottom: 16px; }
+    .result { border-left: 4px solid var(--blue); padding: 10px 13px; background: #f4f8fc; border-radius: 4px; margin: 10px 0; }
+    .status { color: var(--green); font-weight: 700; }
+    details summary { cursor: pointer; font-weight: 700; margin: 6px 0 12px; }
+    footer { color: var(--muted); font-size: .85rem; text-align: center; padding: 18px; }
+    @media (max-width: 650px) {
+      .wrap { padding: 14px 12px 40px; }
+      header { padding: 22px 16px; }
+      .panel { padding: 15px; }
+      nav { margin: 0 -12px; padding: 9px 12px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>{{ title }}</h1>
+    <p>{{ subtitle | default("Công cụ phân tích học thuật cho dữ liệu chứng khoán và chi phí thực thi.") }}</p>
+  </header>
+  <main class="wrap">
+    <div class="notice info">{{ disclaimer }}</div>
+    {% if message %}<div class="notice info">{{ message }}</div>{% endif %}
+    {% if error %}<div class="notice error">{{ error }}</div>{% endif %}
+
+    {% if empty %}
+      <section class="panel">
+        <h2>Chưa có dữ liệu</h2>
+        <p>Chưa có dữ liệu trong cơ sở dữ liệu. Chạy bộ thu thập hoặc tạo dữ liệu mô phỏng để thử giao diện.</p>
+        <form method="post" action="/">
+          <button type="submit" name="action" value="generate_demo">Tạo dữ liệu mô phỏng (10 phiên, 50 mã)</button>
+        </form>
+        <p class="muted">Cơ sở dữ liệu: {{ db_path }}</p>
+      </section>
+    {% else %}
+      <form method="post" action="/" id="controls">
+        <section class="panel" id="settings">
+          <h2>Tham số phân tích</h2>
+          <div class="settings">
+            <label>Vốn cho một lệnh (triệu VND)
+              <input type="number" name="capital_m" min="10" max="100000" step="10" value="{{ capital_m }}">
+            </label>
+            <label>Ngày phân tích
+              <select name="date">
+                {% for day in dates %}
+                  <option value="{{ day }}" {% if day == selected_date %}selected{% endif %}>{{ day }}</option>
+                {% endfor %}
+              </select>
+            </label>
+            <label>Thời điểm phân tích (giờ VN)
+              <input type="time" name="time" value="{{ selected_time }}">
+            </label>
+            <label>Yêu cầu nhanh (quy tắc, không dùng AI)
+              <input type="text" name="nl" value="{{ nl | default('') }}" placeholder="vốn 300 triệu, top 8, ưu tiên khối lượng">
+            </label>
+          </div>
+          {% if nl_preview %}
+            <p class="muted">Tham số được dịch từ yêu cầu nhanh; kiểm tra trước khi áp dụng:</p>
+            <pre>{{ nl_preview }}</pre>
+          {% endif %}
+          <label class="check"><input type="checkbox" name="apply_nl" {% if apply_nl %}checked{% endif %}> Áp dụng yêu cầu nhanh</label>
+          <details>
+            <summary>Trọng số yếu tố & phạt chi phí</summary>
+            <div class="factor-grid">
+              {% for name, spec in factors.items() %}
+                <label class="factor">{{ name }}
+                  <output for="weight-{{ loop.index }}">{{ "%.1f"|format(spec.weight) }}</output>
+                  <input id="weight-{{ loop.index }}" type="range" min="0" max="3" step="0.1" name="weight__{{ name }}" value="{{ spec.weight if spec.enabled else 0 }}" oninput="this.previousElementSibling.value=Number(this.value).toFixed(1)">
+                </label>
+              {% endfor %}
+              <label class="factor">λ phạt chi phí
+                <output>{{ "%.1f"|format(cost_penalty_lambda) }}</output>
+                <input type="range" min="0" max="2" step="0.1" name="cost_penalty_lambda" value="{{ cost_penalty_lambda }}" oninput="this.previousElementSibling.value=Number(this.value).toFixed(1)">
+              </label>
+            </div>
+          </details>
+          <p class="muted">Múi giờ: {{ timezone }} (UTC+7). Yếu tố có trọng số 0 sẽ bị tắt.</p>
+          <div class="actions"><button type="submit" name="action" value="refresh">Cập nhật phân tích</button></div>
+        </section>
+      </form>
+
+      {% if no_ranked %}
+        <div class="notice warn">Không có dữ liệu tại thời điểm đã chọn (có thể trước giờ mở cửa hoặc chưa có snapshot).</div>
+      {% else %}
+        {% if is_mock %}<div class="mock-banner">⚠ DỮ LIỆU MÔ PHỎNG (source=mock): chỉ để thử giao diện, KHÔNG phải dữ liệu thị trường thật.</div>{% endif %}
+        <nav aria-label="Điều hướng nội dung">
+          {% for target, label in tabs %}<a href="#{{ target }}">{{ label }}</a>{% endfor %}
+        </nav>
+
+        <section class="panel" id="ranking">
+          <h2>Xếp hạng cổ phiếu</h2>
+          <div class="metrics">
+            <div class="metric"><span>Mã đủ điều kiện</span><strong>{{ eligible_count }}/{{ ranked_count }}</strong></div>
+            <div class="metric"><span>Chi phí vòng P50 trung vị (bps)</span><strong>{{ median_cost }}</strong></div>
+            <div class="metric"><span>Bị loại vì vượt độ sâu 3 mức</span><strong>{{ beyond_count }}</strong></div>
+            <div class="metric"><span>Độ rộng: tăng / giảm</span><strong>{{ market_breadth }}</strong></div>
+            <div class="metric"><span>Dữ liệu cập nhật lần cuối</span><strong>{{ updated_at }}</strong></div>
+            <div class="metric"><span>Tuổi dữ liệu</span><strong>{{ age_text }}</strong></div>
+            <div class="metric"><span>Kết nối thu thập</span><strong>{{ connection_text }}</strong></div>
+          </div>
+          <p class="muted">Ngưỡng chi phí P90: <strong>{{ threshold }} bps</strong> ({{ calibration_text }}).</p>
+          <label class="check"><input form="controls" type="checkbox" name="show_out" {% if show_out %}checked{% endif %} onchange="this.form.requestSubmit()"> Hiện cả mã bị loại (kèm lý do)</label>
+          <label style="max-width:400px;margin:12px 0">Lọc theo mã (có thể chọn nhiều)
+            <select form="controls" name="symbols" multiple>
+              {% for symbol in ranked_symbols %}
+                <option value="{{ symbol }}" {% if symbol in selected_symbols %}selected{% endif %}>{{ symbol }}</option>
+              {% endfor %}
+            </select>
+          </label>
+          <div class="actions"><button form="controls" type="submit" name="action" value="refresh">Áp dụng bộ lọc mã</button></div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr>{% for column in ranking_table.columns %}<th>{{ column }}</th>{% endfor %}</tr></thead>
+              <tbody>
+                {% for row in ranking_table.rows %}
+                  <tr>{% for cell in row %}<td>{{ cell }}</td>{% endfor %}</tr>
+                {% else %}<tr><td colspan="{{ ranking_table.columns|length }}">Không có mã phù hợp bộ lọc.</td></tr>{% endfor %}
+              </tbody>
+            </table>
+          </div>
+          <div id="chart-ranking" class="chart"></div>
+          <script type="application/json" data-chart="chart-ranking">{{ ranking_chart | tojson }}</script>
+        </section>
+
+        <section class="panel" id="details">
+          <h2>Chi tiết mã & mô phỏng duyệt sổ lệnh</h2>
+          <div class="settings">
+            <label>Chọn mã
+              <select form="controls" name="symbol">
+                {% for symbol in detail_pool %}
+                  <option value="{{ symbol }}" {% if symbol == detail.symbol %}selected{% endif %}>{{ symbol }}</option>
+                {% endfor %}
+              </select>
+            </label>
+            <label>Chiều lệnh minh họa
+              <select form="controls" name="side">
+                <option {% if selected_side == "Mua" %}selected{% endif %}>Mua</option>
+                <option {% if selected_side == "Bán" %}selected{% endif %}>Bán</option>
+              </select>
+            </label>
+          </div>
+          <div class="actions"><button form="controls" type="submit" name="action" value="refresh">Xem chi tiết</button></div>
+          <p>{{ detail.explanation }}</p>
+          {% if detail.warning %}<div class="notice warn">{{ detail.warning }}</div>{% endif %}
+          {% if detail.metrics %}
+            <div class="metrics">
+              {% for label, value in detail.metrics %}<div class="metric"><span>{{ label }}</span><strong>{{ value }}</strong></div>{% endfor %}
+            </div>
+          {% endif %}
+          {% if detail.charts.contribution %}
+            <div id="chart-contribution" class="chart"></div>
+            <script type="application/json" data-chart="chart-contribution">{{ detail.charts.contribution | tojson }}</script>
+          {% endif %}
+          {% if detail.charts.depth %}
+            <div id="chart-depth" class="chart"></div>
+            <script type="application/json" data-chart="chart-depth">{{ detail.charts.depth | tojson }}</script>
+            <div id="chart-cost" class="chart"></div>
+            <script type="application/json" data-chart="chart-cost">{{ detail.charts.cost | tojson }}</script>
+          {% endif %}
+        </section>
+
+        <section class="panel" id="forward-test">
+          <h2>Forward-test giả lập</h2>
+          <p><strong>Không đặt lệnh thật.</strong> Chốt danh sách tại thời điểm đang chọn, sau đó đánh giá bằng giá vào/ra lấy từ sổ lệnh ở các phiên sau, đã trừ phí và thuế.</p>
+          <p class="muted">Phiên hiệu chỉnh ngưỡng: {{ calibration_dates }}. Các phiên sau dùng ngưỡng đã cố định.</p>
+          <button form="controls" type="submit" name="action" value="freeze" {% if eligible_count == 0 %}disabled{% endif %}>Chốt danh sách tại thời điểm đang chọn</button>
+          {% if not forward_results %}
+            <p class="muted">Chưa có lần chốt nào. Có thể dùng scripts/freeze_picks.py để chốt mỗi phiên tại giờ cố định.</p>
+          {% else %}
+            {% for result in forward_results %}
+              <div class="result">
+                <strong>{{ result.run_id }} — {{ result.status }}</strong>
+                {% if result.reason %}<p>{{ result.reason }}</p>{% endif %}
+                {% if result.status == "OK" %}
+                  <div class="metrics">
+                    <div class="metric"><span>Lợi suất ròng TB (top-N)</span><strong>{{ "%.2f"|format(result.mean_net_pick * 100) }}%</strong></div>
+                    <div class="metric"><span>Vượt trội so với mọi mã đủ điều kiện</span><strong>{{ "%.2f"|format(result.excess_vs_eligible * 100) }}%</strong></div>
+                    <div class="metric"><span>IC hạng</span><strong>{{ "%.2f"|format(result.rank_ic) }}</strong></div>
+                    <div class="metric"><span>Hạng phần trăm so với chọn ngẫu nhiên</span><strong>{{ "%.0f"|format(result.random_pctile * 100) }}</strong></div>
+                  </div>
+                  <div id="chart-forward-{{ loop.index }}" class="chart"></div>
+                  <script type="application/json" data-chart="chart-forward-{{ loop.index }}">{{ result.chart | tojson }}</script>
+                {% endif %}
+              </div>
+            {% endfor %}
+          {% endif %}
+          {% if summary.get("n_runs") %}
+            <h3>Tổng hợp</h3>
+            <p>Số lần chốt đã đánh giá: {{ summary.n_runs }}; vượt trội TB {{ "%.2f"|format(summary.mean_excess * 100) }}%;
+              khoảng tin cậy 95% bootstrap [{{ "%.2f"|format(summary.ci95[0] * 100) }}%, {{ "%.2f"|format(summary.ci95[1] * 100) }}%].</p>
+            <div class="notice warn">{{ summary.caveat }}</div>
+          {% endif %}
+        </section>
+
+        <section class="panel" id="quality">
+          <h2>Chất lượng dữ liệu</h2>
+          <h3>Phủ dữ liệu theo ngày</h3>
+          <div class="table-wrap">
+            <table><thead><tr>{% for column in coverage.columns %}<th>{{ column }}</th>{% endfor %}</tr></thead>
+              <tbody>{% for row in coverage.rows %}<tr>{% for cell in row %}<td>{{ cell }}</td>{% endfor %}</tr>{% endfor %}</tbody>
+            </table>
+          </div>
+          <p class="muted">Nguồn dữ liệu trong cơ sở: {{ sources_text }}.</p>
+          <h3>Sự cố chất lượng đã ghi nhận</h3>
+          {% if quality.rows %}
+            <div class="table-wrap">
+              <table><thead><tr>{% for column in quality.columns %}<th>{{ column }}</th>{% endfor %}</tr></thead>
+                <tbody>{% for row in quality.rows %}<tr>{% for cell in row %}<td>{{ cell }}</td>{% endfor %}</tr>{% endfor %}</tbody>
+              </table>
+            </div>
+          {% else %}<p class="muted">Chưa có bản ghi sự cố (chưa chạy bộ thu thập).</p>{% endif %}
+          {% if flag_counts %}<p>Cờ trên các snapshot đã lưu: {{ flag_counts }}</p>{% endif %}
+          <h3>Trạng thái bộ thu thập</h3>
+          <pre>{{ collector_status }}</pre>
+        </section>
+
+        <section class="panel" id="method">
+          <h2>Phương pháp & giới hạn</h2>
+          <p><strong>Cách tính tóm tắt.</strong> Xem công thức chi tiết trong <code>docs/METHODS.md</code>.</p>
+          <ol>
+            <li><strong>Bộ lọc cứng:</strong> loại mã thiếu chào mua/bán, khóa trần/sàn, dữ liệu cũ, vốn vượt {{ "%.0f"|format(max_participation * 100) }}% GTGD trung bình ngày, chi phí vòng P90 vượt ngưỡng, hoặc lệnh thường vượt độ sâu 3 mức.</li>
+            <li><strong>Điểm yếu tố:</strong> trung bình có trọng số của các yếu tố đã chuẩn hóa chéo mã (z-score, winsorize). Trọng số là tiên nghiệm, chưa tối ưu trên dữ liệu.</li>
+            <li><strong>Chi phí thực thi:</strong> duyệt sổ lệnh 3 mức với vốn đã nhập (trượt giá so với giá giữa) + phí + thuế, lấy P50/P90 trong cửa sổ {{ lookback_minutes }} phút.</li>
+            <li><strong>Điểm ròng:</strong> z(điểm yếu tố) − λ·z(chi phí P90), λ = {{ cost_penalty }}.</li>
+          </ol>
+          <p><strong>Giới hạn:</strong> chỉ thấy 3 mức giá, không thấy lệnh ẩn; không tính tác động của chính lệnh lên giá; vốn vượt độ sâu được gắn cờ thay vì ngoại suy; mẫu forward-test nhỏ nên không kết luận thống kê; phí/giờ giao dịch cần đối chiếu quy định hiện hành; dữ liệu có thể trễ so với sàn.</p>
+          <p>{{ disclaimer }}</p>
+        </section>
+      {% endif %}
+    {% endif %}
+    <footer>ExecScreen · Ứng dụng web FastAPI · Cơ sở dữ liệu: {{ db_path | default("") }}</footer>
+  </main>
+  <script>
+    for (const payload of document.querySelectorAll("script[data-chart]")) {
+      const target = document.getElementById(payload.dataset.chart);
+      if (target && window.Plotly) {
+        const figure = JSON.parse(payload.textContent);
+        Plotly.newPlot(target, figure.data, figure.layout, {responsive: true, displaylogo: false});
+      }
+    }
+  </script>
+</body>
+</html>

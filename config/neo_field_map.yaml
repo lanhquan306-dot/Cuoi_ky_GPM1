@@ -1,0 +1,41 @@
+# Ánh xạ tên trường NEO API -> tên trường chuẩn của ExecScreen.
+# CHƯA ĐIỀN: chạy `python scripts/probe_neo.py record` trong giờ giao dịch, xem danh sách trường
+# thực tế, rồi thay mỗi "TODO" bằng đường dẫn dạng a.b.c (hoặc a.0.b cho phần tử mảng).
+# Trường nào NEO không có thì để TODO hoặc xóa: hệ thống sẽ coi là thiếu dữ liệu (không đoán).
+
+symbol: TODO
+ts: TODO
+ts_format: epoch_ms        # epoch_ms | epoch_s | iso | ymd_hms | hms
+price_scale: 1             # nếu API trả giá theo nghìn đồng thì đặt 1000
+volume_scale: 1
+value_scale: 1
+
+ref: TODO
+ceiling: TODO
+floor: TODO
+last: TODO
+open: TODO
+high: TODO
+low: TODO
+cum_volume: TODO
+cum_value: TODO
+
+bid1_p: TODO
+bid1_v: TODO
+bid2_p: TODO
+bid2_v: TODO
+bid3_p: TODO
+bid3_v: TODO
+ask1_p: TODO
+ask1_v: TODO
+ask2_p: TODO
+ask2_v: TODO
+ask3_p: TODO
+ask3_v: TODO
+
+fbuy_vol: TODO
+fsell_vol: TODO
+fbuy_val: TODO
+fsell_val: TODO
+room_cur: TODO
+room_total: TODO

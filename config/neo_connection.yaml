@@ -1,0 +1,17 @@
+# Thông số kết nối NEO API. Điền theo tài liệu chính thức (tôi chưa xác minh được các giá trị này).
+# URL và token lấy từ biến môi trường (.env), KHÔNG ghi vào file này.
+websocket:
+  url_env: NEO_WS_URL
+  auth_header: "Authorization"          # TODO: xác nhận cách gửi token (header / tham số / tin nhắn đầu)
+  auth_scheme: "Bearer"                 # TODO
+  # Tin nhắn đăng ký theo dõi: dùng {symbols_json} cho mảng mã. TODO: thay bằng cấu trúc đúng của NEO.
+  subscribe_template: '{"action": "TODO", "symbols": {symbols_json}}'
+  ping_interval_s: 20
+  reconnect_min_s: 1
+  reconnect_max_s: 60
+rest:
+  base_url_env: NEO_REST_BASE_URL
+  rate_per_second: 5                    # giới hạn nêu trong đề
+  retries: 3
+  endpoints:                            # TODO: điền đường dẫn thật
+    stock_detail: TODO

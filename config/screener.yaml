@@ -1,0 +1,67 @@
+# =====================================================================
+# ExecScreen - cấu hình toàn bộ bộ lọc. Mọi tham số chỉnh ở đây, KHÔNG sửa trong mã.
+# Giá trị mặc định là "giá trị khởi điểm có lý luận", chưa được tối ưu trên dữ liệu.
+# Các mục có ghi KIỂM TRA LẠI phải đối chiếu với quy định/biểu phí hiện hành.
+# =====================================================================
+meta:
+  name: ExecScreen
+  version: 0.1.0
+
+universe:
+  file: config/universe_sample.csv   # cột: symbol, exchange, tier (tier chỉ dùng cho dữ liệu mô phỏng)
+
+sessions:                            # HOSE - KIỂM TRA LẠI giờ giao dịch hiện hành
+  tz: Asia/Ho_Chi_Minh
+  ato: ["09:00", "09:15"]
+  continuous: [["09:15", "11:30"], ["13:00", "14:30"]]
+  atc: ["14:30", "14:45"]
+
+fees:                                # đơn vị bps (1 bps = 0.01%) - KIỂM TRA LẠI biểu phí VPBankS
+  buy_bps: 15
+  sell_bps: 15
+  sell_tax_bps: 10                   # thuế bán chứng khoán 0,1%
+
+execution:
+  capital_vnd: 200000000             # vốn danh nghĩa cho một lệnh (người dùng đổi trên giao diện)
+  lot_size: 100
+  lookback_minutes: 30               # cửa sổ gom snapshot để lấy trung vị / P90 chi phí
+  max_stale_seconds: 120             # phải lớn hơn 2 lần chu kỳ lấy mẫu
+  min_snapshots: 10                  # ít hơn mức này thì không đủ cơ sở đánh giá chi phí
+  beyond_depth: flag                 # flag: chỉ gắn cờ | sqrt_impact: cộng ước lượng tác động căn bậc hai
+  sqrt_impact_y: 1.0                 # hệ số Y của mô hình căn bậc hai (tham số giả định)
+
+gates:                               # bộ lọc cứng: không đạt thì không được xếp hạng
+  require_quote: true                # phải có chào mua và chào bán hợp lệ
+  exclude_limit_locked: true         # loại mã khóa trần/sàn (một phía không có lệnh)
+  exclude_stale: true
+  max_participation: 0.05            # vốn / GTGD trung bình ngày; quy ước thực hành, có thể đổi
+  min_adv_vnd: null                  # GTGD trung bình tối thiểu (null = không dùng)
+  max_cost_p90_bps:                  # ngưỡng chi phí vòng (P90); mode percentile lấy từ phân phối của rổ
+    mode: percentile                 # percentile | fixed
+    q: 0.80
+    value: 60
+  max_beyond_depth_share: 0.5        # tỷ lệ snapshot mà lệnh vượt độ sâu 3 mức
+
+factors:                             # direction: +1 điểm càng cao càng tốt, -1 ngược lại
+  mom_ref:        {enabled: true,  weight: 1.0, direction: 1}
+  range_pos:      {enabled: true,  weight: 1.0, direction: 1}
+  rvol_tod:       {enabled: true,  weight: 1.0, direction: 1, min_sessions: 3}
+  obi3:           {enabled: true,  weight: 1.0, direction: 1, window_minutes: 10}
+  range_pct:      {enabled: true,  weight: 0.5, direction: 1}
+  foreign_net:    {enabled: false, weight: 1.0, direction: 1}   # bật khi xác nhận có dữ liệu
+
+scoring:
+  normalization: zscore              # zscore | rank
+  winsor: [0.02, 0.98]
+  min_factors_available: 2
+  cost_penalty_lambda: 0.5           # điểm ròng = z(điểm yếu tố) - lambda * z(chi phí P90)
+
+forward_test:
+  top_n: 5
+  decision_time: "10:00"
+  entry_delay_seconds: 60            # >= độ trễ P95 đo được từ probe_neo.py
+  horizons_sessions: [1]
+  calibration_sessions: 4            # các phiên đầu dùng để cố định ngưỡng, không dùng để đánh giá
+  random_baseline_draws: 2000
+  bootstrap_draws: 5000
+  seed: 42
