@@ -3,305 +3,1852 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <meta name="theme-color" content="#edf5ff">
   <title>{{ title }}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'Segoe UI', 'system-ui', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'SFMono-Regular', 'Consolas', 'monospace']
+          }
+        }
+      }
+    };
+  </script>
   <style>
     :root {
       color-scheme: light;
-      --ink: #172033;
-      --muted: #667085;
-      --line: #e4e9f0;
-      --surface: #fff;
-      --canvas: #f4f7fb;
-      --blue: #1769aa;
-      --blue-dark: #104c7b;
-      --red: #a4262c;
-      --green: #18794e;
-      font-family: Inter, "Segoe UI", Arial, sans-serif;
+      --bg: #edf5ff;
+      --card: #ffffff;
+      --line: #d9ecff;
+      --line-strong: #56b8ff;
+      --ink: #16324f;
+      --ink-soft: #3d5a78;
+      --muted: #74879f;
+      --accent: #2f80ed;
+      --accent-deep: #1d5fd1;
+      --violet: #8b7cf6;
+      --mint: #2fbfa0;
+      --rose: #ef7fa6;
+      --peach: #f2a95f;
+      --shadow: 0 5px 20px rgba(33, 105, 202, .12);
+      --shadow-soft: 0 2px 10px rgba(33, 105, 202, .08);
+      --sidebar-w: 280px;
+
+      /* Ảnh Hero: ảnh chung + ảnh riêng theo từng tab (tự fallback nếu chưa có file) */
+      --hero-photo: url("/static/images/hero_finance.jpg");
+      --hero-photo-tab: url("/static/images/hero-ranking.jpg");
+      --hero-tint: linear-gradient(90deg, rgba(224, 239, 255, .98) 0%, rgba(224, 239, 255, .86) 33%, rgba(226, 238, 255, .10) 72%);
     }
+    body[data-tab="ranking"] { --hero-photo-tab: url("/static/images/hero-ranking.jpg"); }
+    body[data-tab="details"] { --hero-photo-tab: url("/static/images/hero-details.jpg"); }
+    body[data-tab="forward-test"] { --hero-photo-tab: url("/static/images/hero-forward-test.jpg"); }
+    body[data-tab="quality"] { --hero-photo-tab: url("/static/images/hero-quality.jpg"); }
+    body[data-tab="method"] { --hero-photo-tab: url("/static/images/hero-method.jpg"); }
+
     * { box-sizing: border-box; }
-    body { margin: 0; background: var(--canvas); color: var(--ink); }
-    header { background: linear-gradient(120deg, #10243b, #1769aa); color: white; padding: 28px max(24px, calc((100% - 1440px) / 2)); }
-    header h1 { margin: 0 0 8px; font-size: clamp(1.55rem, 3vw, 2.2rem); }
-    header p { margin: 0; max-width: 900px; color: #e4effa; line-height: 1.55; }
-    .wrap { max-width: 1440px; margin: auto; padding: 22px 24px 60px; }
-    .notice { padding: 13px 16px; border-radius: 9px; margin: 0 0 16px; line-height: 1.5; }
-    .notice.info { background: #e8f2fc; border: 1px solid #c7def3; }
-    .notice.warn { background: #fff4d6; border: 1px solid #f3d37d; }
-    .notice.error { background: #fde9e8; border: 1px solid #f3b4b1; color: #742a27; }
-    .panel { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 20px; margin: 0 0 18px; box-shadow: 0 2px 8px #1c35500a; }
-    h2 { margin: 0 0 14px; font-size: 1.35rem; }
-    h3 { margin: 20px 0 10px; font-size: 1.05rem; }
-    .settings { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px 18px; align-items: end; }
-    label { display: block; font-size: .9rem; font-weight: 650; color: #344054; }
-    input, select, button { font: inherit; }
-    input[type="number"], input[type="date"], input[type="time"], input[type="text"], select:not([multiple]) {
-      width: 100%; margin-top: 6px; min-height: 40px; padding: 8px 10px; border: 1px solid #cbd4df; border-radius: 7px; background: white; color: var(--ink);
+    html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Inter, "Segoe UI", system-ui, sans-serif;
+      font-size: 13px;
+      color: var(--ink);
+      background:
+        radial-gradient(1100px 520px at 78% -8%, rgba(255, 255, 255, .95), rgba(255, 255, 255, 0) 62%),
+        radial-gradient(900px 600px at -10% 110%, rgba(139, 124, 246, .10), rgba(139, 124, 246, 0) 55%),
+        linear-gradient(180deg, #f4f9ff 0%, var(--bg) 45%, #e6f0ff 100%);
+      background-attachment: fixed;
+      -webkit-font-smoothing: antialiased;
+      font-feature-settings: "cv11", "ss01";
     }
-    select[multiple] { width: 100%; min-height: 110px; margin-top: 6px; border: 1px solid #cbd4df; border-radius: 7px; padding: 5px; }
-    input[type="range"] { width: 100%; accent-color: var(--blue); }
-    output { float: right; color: var(--blue-dark); font-variant-numeric: tabular-nums; }
-    .factor-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 10px 18px; }
-    .factor { padding: 9px 11px; border: 1px solid var(--line); border-radius: 8px; }
-    .actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; }
-    button { border: 0; border-radius: 7px; background: var(--blue); color: white; padding: 10px 15px; font-weight: 700; cursor: pointer; }
-    button:hover { background: var(--blue-dark); }
-    button.secondary { background: #e9eef5; color: #24364b; }
-    button.secondary:hover { background: #dce5ef; }
-    .check { display: flex; gap: 8px; align-items: center; margin-top: 11px; font-weight: 500; }
-    .check input { accent-color: var(--blue); }
-    nav { position: sticky; top: 0; z-index: 4; display: flex; gap: 6px; overflow-x: auto; padding: 10px 0; background: var(--canvas); }
-    nav a { white-space: nowrap; text-decoration: none; color: #31516d; background: white; border: 1px solid var(--line); padding: 9px 12px; border-radius: 20px; font-size: .9rem; }
-    nav a:hover { background: #e8f2fc; }
-    .metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin: 12px 0; }
-    .metric { padding: 14px; border: 1px solid var(--line); border-radius: 9px; background: #fbfcfe; }
-    .metric span { display: block; color: var(--muted); font-size: .82rem; margin-bottom: 6px; }
-    .metric strong { font-size: 1.25rem; font-variant-numeric: tabular-nums; }
-    .table-wrap { width: 100%; overflow-x: auto; border: 1px solid var(--line); border-radius: 8px; }
-    table { border-collapse: collapse; width: 100%; font-size: .88rem; }
-    th, td { padding: 9px 11px; border-bottom: 1px solid var(--line); text-align: left; white-space: nowrap; }
-    th { background: #f1f5f9; color: #344054; position: sticky; top: 0; }
-    tbody tr:hover { background: #f8fbff; }
-    .chart { width: 100%; min-height: 280px; }
-    .muted { color: var(--muted); }
-    .mock-banner { padding: 12px 15px; background: #fde9e8; color: #842626; border: 1px solid #f3b4b1; border-radius: 8px; font-weight: 700; margin-bottom: 16px; }
-    .result { border-left: 4px solid var(--blue); padding: 10px 13px; background: #f4f8fc; border-radius: 4px; margin: 10px 0; }
-    .status { color: var(--green); font-weight: 700; }
-    details summary { cursor: pointer; font-weight: 700; margin: 6px 0 12px; }
-    footer { color: var(--muted); font-size: .85rem; text-align: center; padding: 18px; }
-    @media (max-width: 650px) {
-      .wrap { padding: 14px 12px 40px; }
-      header { padding: 22px 16px; }
-      .panel { padding: 15px; }
-      nav { margin: 0 -12px; padding: 9px 12px; }
+    .font-mono, output, code, .num { font-variant-numeric: tabular-nums; }
+    ::selection { background: rgba(47, 128, 237, .18); }
+    a { color: inherit; text-decoration: none; }
+    button { font-family: inherit; }
+
+    ::-webkit-scrollbar { width: 9px; height: 9px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb {
+      background: #bfd8f2; border-radius: 999px;
+      border: 2px solid transparent; background-clip: content-box;
+    }
+    ::-webkit-scrollbar-thumb:hover { background: #8fbce8; background-clip: content-box; }
+
+    summary { list-style: none; cursor: pointer; }
+    summary::-webkit-details-marker { display: none; }
+    details[open] .chev { transform: rotate(180deg); }
+
+    /* ============ SIDEBAR ============ */
+    .app-sidebar {
+      position: fixed;
+      top: 0; left: 0; bottom: 0;
+      width: var(--sidebar-w);
+      display: flex;
+      flex-direction: column;
+      padding: 20px 16px 16px;
+      overflow-y: auto;
+      overflow-x: hidden;
+      z-index: 60;
+      background:
+        radial-gradient(320px 220px at 105% -4%, rgba(139, 124, 246, .14), rgba(139, 124, 246, 0) 65%),
+        linear-gradient(180deg, #ffffff 0%, #f7fbff 42%, #eaf3ff 100%);
+      border-right: 1px solid rgba(86, 184, 255, .35);
+      box-shadow: 8px 0 32px rgba(33, 105, 202, .07);
+      scrollbar-width: thin;
+      scrollbar-color: #bfd8f2 transparent;
+    }
+    .brand { display: flex; align-items: center; gap: 11px; padding: 2px 6px 18px; }
+    .brand-logo {
+      width: 42px; height: 42px; flex-shrink: 0;
+      border-radius: 14px;
+      display: grid; place-items: center;
+      background: linear-gradient(135deg, #63b8ff 0%, #2f80ed 55%, #8b7cf6 100%);
+      color: #fff; font-family: "JetBrains Mono", monospace;
+      font-size: 14px; font-weight: 700; letter-spacing: -.03em;
+      box-shadow: 0 8px 18px rgba(47, 128, 237, .35);
+    }
+    .brand-name { margin: 0; font-size: 16px; font-weight: 800; letter-spacing: -.02em; color: #142f4d; }
+    .brand-sub { margin: 2px 0 0; font-size: 10.5px; line-height: 1.35; color: var(--muted); }
+
+    .side-nav { display: flex; flex-direction: column; gap: 3px; padding: 0 0 14px; border-bottom: 1px solid var(--line); }
+    .side-label {
+      margin: 0 0 6px; padding: 0 10px;
+      font-size: 9px; font-weight: 700; letter-spacing: .15em; text-transform: uppercase; color: #93a6bd;
+    }
+    .site-label { margin-top: 16px; margin-bottom: 2px; }
+    .side-link {
+      display: flex; align-items: center; gap: 10px;
+      padding: 8px 10px; border-radius: 11px;
+      border: 1px solid transparent;
+      font-size: 12.5px; font-weight: 500; color: #54708e;
+      transition: background-color .16s, color .16s, border-color .16s, box-shadow .16s;
+    }
+    .side-link svg { width: 16px; height: 16px; flex-shrink: 0; color: #8fa8c2; transition: color .16s; }
+    .side-link:hover { background: #eef7ff; color: var(--accent-deep); }
+    .side-link:hover svg { color: var(--accent); }
+    .side-link.tab-active {
+      background: linear-gradient(100deg, rgba(47, 128, 237, .14), rgba(139, 124, 246, .12));
+      border-color: rgba(86, 184, 255, .5);
+      box-shadow: inset 3px 0 0 var(--accent), 0 3px 10px rgba(47, 128, 237, .10);
+      color: var(--accent-deep); font-weight: 700;
+    }
+    .side-link.tab-active svg { color: var(--accent); }
+
+    .side-form { padding-top: 4px; }
+    .side-block + .side-block { margin-top: 11px; }
+    .field-label {
+      display: block; margin-bottom: 4px;
+      font-size: 10px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; color: #7f93aa;
+    }
+    .field {
+      width: 100%;
+      border: 1px solid #d5e8fb; border-radius: 9px;
+      background: #fff; color: #27425f;
+      padding: 7px 9px; font-size: 12px; outline: none;
+      transition: border-color .15s, box-shadow .15s;
+    }
+    .field:focus { border-color: var(--line-strong); box-shadow: 0 0 0 3px rgba(86, 184, 255, .22); }
+    .field::placeholder { color: #a5b8cc; }
+    .capital-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+    .capital-input-wrap { position: relative; flex: 1 1 96px; min-width: 90px; }
+    .capital-field { padding-right: 28px; font-family: "JetBrains Mono", monospace; font-size: 12.5px; }
+    .capital-suffix {
+      position: absolute; right: 9px; top: 50%; transform: translateY(-50%);
+      font-family: "JetBrains Mono", monospace; font-size: 9.5px; color: #9db1c6; pointer-events: none;
+    }
+    .capital-presets { display: flex; align-items: center; gap: 3px; }
+    .capital-chip {
+      border: 1px solid #dcecfb; border-radius: 7px; background: #f6fbff;
+      padding: 4px 6px; font-family: "JetBrains Mono", monospace; font-size: 9.5px; color: #6b86a2;
+      cursor: pointer; transition: all .15s;
+    }
+    .capital-chip:hover { border-color: #9cd0ff; color: var(--accent-deep); background: #eef7ff; }
+    .capital-chip.is-on {
+      border-color: #8ac8ff; background: linear-gradient(135deg, #eaf5ff, #e6e1ff);
+      color: var(--accent-deep); font-weight: 700;
+    }
+    .field-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+    .apply-row {
+      display: flex; align-items: center; gap: 7px;
+      margin-top: 8px; font-size: 11px; color: #5b7694; cursor: pointer;
+    }
+    .apply-row input { width: 13px; height: 13px; accent-color: var(--accent); }
+
+    .weights {
+      border: 1px dashed #cfe4f9; border-radius: 12px;
+      background: rgba(255, 255, 255, .78);
+      overflow: hidden;
+    }
+    .weights summary {
+      display: flex; align-items: center; gap: 8px;
+      padding: 9px 10px; font-size: 11.5px; font-weight: 600; color: #4b6c8c;
+    }
+    .weights summary:hover { color: var(--accent-deep); }
+    .weights summary svg { width: 14px; height: 14px; color: #8fa8c2; flex-shrink: 0; }
+    .weights summary .chev { margin-left: auto; width: 12px; height: 12px; transition: transform .2s; }
+    .weights-body { padding: 10px 10px 12px; border-top: 1px solid #eaf4ff; }
+    .weight-row + .weight-row { margin-top: 10px; }
+    .weight-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+    .weight-head span { font-size: 11px; color: #5b7694; }
+    .weight-head output { font-family: "JetBrains Mono", monospace; font-size: 11px; font-weight: 600; color: var(--accent); }
+    .weight-note { margin: 10px 0 0; font-size: 10px; line-height: 1.55; color: #9db1c6; }
+    .lambda-row { margin-top: 11px; padding-top: 10px; border-top: 1px solid #eaf4ff; }
+
+    input[type="range"] {
+      -webkit-appearance: none; appearance: none;
+      width: 100%; height: 5px; border-radius: 999px;
+      background: linear-gradient(90deg, #cfe6ff, #ded8ff);
+      outline: none; cursor: pointer; margin-top: 7px;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none; height: 13px; width: 13px; border-radius: 999px;
+      background: linear-gradient(135deg, #3f97f0, #8b7cf6);
+      border: 2px solid #fff; box-shadow: 0 1px 4px rgba(33, 105, 202, .4);
+      transition: transform .12s;
+    }
+    input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.14); }
+    input[type="range"]::-moz-range-thumb {
+      height: 11px; width: 11px; border-radius: 999px;
+      background: #3f97f0; border: 2px solid #fff;
+    }
+
+    .btn-update {
+      width: 100%; display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+      margin-top: 12px; padding: 10px 12px;
+      border: 0; border-radius: 11px; cursor: pointer;
+      background: linear-gradient(100deg, #3f97f0, #8b7cf6);
+      color: #fff; font-size: 12.5px; font-weight: 700;
+      box-shadow: 0 8px 18px rgba(63, 151, 240, .32);
+      transition: transform .16s, box-shadow .16s;
+    }
+    .btn-update:hover { transform: translateY(-1px); box-shadow: 0 12px 22px rgba(63, 151, 240, .42); }
+    .btn-update svg { width: 14px; height: 14px; }
+
+    .nl-preview { margin-top: 9px; border: 1px solid #d9ecff; border-radius: 10px; background: #f5faff; overflow: hidden; }
+    .nl-preview summary {
+      display: flex; align-items: center; justify-content: space-between; gap: 8px;
+      padding: 7px 9px; font-size: 10.5px; font-weight: 600; color: #4b6c8c;
+    }
+    .nl-preview .chev { width: 12px; height: 12px; transition: transform .2s; }
+    .nl-preview pre {
+      margin: 0; padding: 8px 9px; max-height: 160px; overflow: auto;
+      border-top: 1px solid #e6f2ff;
+      font-family: "JetBrains Mono", monospace; font-size: 9.5px; line-height: 1.6; color: #31577c;
+    }
+
+    .status-card {
+      margin-top: 16px; padding: 11px 12px;
+      border: 1px solid rgba(86, 184, 255, .45); border-radius: 14px;
+      background: linear-gradient(160deg, #ffffff, #f2f9ff);
+      box-shadow: var(--shadow-soft);
+    }
+    .status-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+    .status-top span:first-child { font-size: 9px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: #93a6bd; }
+    .status-time { margin: 8px 0 0; font-family: "JetBrains Mono", monospace; font-size: 13px; font-weight: 700; color: #173655; }
+    .status-sub { margin: 3px 0 0; font-size: 10.5px; line-height: 1.5; color: #7f95ad; }
+    .status-divider { height: 1px; margin: 9px 0 0; background: #e6f2ff; }
+
+    /* Ảnh nền dọc ở thanh Sidebar bên trái */
+    .sidephoto {
+      flex: 1 1 auto;
+      min-height: 170px;
+      margin-top: 14px;
+      border-radius: 14px;
+      border: 1px solid rgba(86, 184, 255, .38);
+      background-image:
+        linear-gradient(to bottom, #eaf4ff 0%, rgba(234, 244, 255, 0) 22%, rgba(234, 244, 255, 0) 75%, #eaf4ff 100%),
+        url("/static/images/sidebar_finance.jpg");
+      background-position: center center, center center;
+      background-size: cover, cover;
+      background-repeat: no-repeat;
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .45), 0 4px 14px rgba(33, 105, 202, .08);
+    }
+    .side-disclaimer { margin: 10px 2px 0; font-size: 9.5px; line-height: 1.55; color: #9db1c6; }
+
+    /* ============ MAIN ============ */
+    .app-main { min-height: 100vh; margin-left: var(--sidebar-w); display: flex; flex-direction: column; }
+    .app-content { width: 100%; max-width: 1560px; margin: 0 auto; padding: 26px 30px 34px; }
+    .mobile-bar {
+      display: none; position: sticky; top: 0; z-index: 45;
+      align-items: center; gap: 10px; padding: 9px 14px;
+      background: rgba(255, 255, 255, .92);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid rgba(86, 184, 255, .35);
+    }
+    .mobile-toggle {
+      width: 34px; height: 34px; flex-shrink: 0;
+      display: grid; place-items: center;
+      border: 1px solid #d9ecff; border-radius: 10px; background: #fff;
+      color: var(--accent); cursor: pointer;
+    }
+    .mobile-toggle svg { width: 18px; height: 18px; }
+    .mobile-brand { display: flex; align-items: center; gap: 8px; min-width: 0; }
+    .mobile-brand .brand-logo { width: 30px; height: 30px; border-radius: 10px; font-size: 11px; }
+    .mobile-brand p { margin: 0; font-size: 13px; font-weight: 800; letter-spacing: -.01em; }
+
+    /* Hero Banner */
+    .hero {
+      height: 194px;
+      position: relative;
+      isolation: isolate;
+      overflow: hidden;
+      border-radius: 24px;
+      border: 1px solid rgba(86, 184, 255, .5);
+      box-shadow: var(--shadow);
+      padding: 27px 30px;
+      background-image: var(--hero-tint), var(--hero-photo-tab), var(--hero-photo);
+      background-position: center, center 56%, center 56%;
+      background-size: cover, cover, cover;
+      background-repeat: no-repeat;
+    }
+    .hero-body { position: relative; z-index: 2; max-width: 640px; display: flex; flex-direction: column; gap: 7px; }
+    .hero-eyebrow {
+      margin: 0; display: inline-flex; align-items: center; gap: 7px;
+      font-size: 9.5px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; color: #5c82a8;
+    }
+    .hero-dot {
+      width: 6px; height: 6px; border-radius: 999px;
+      background: linear-gradient(135deg, #3f97f0, #8b7cf6);
+      box-shadow: 0 0 0 4px rgba(86, 184, 255, .18);
+    }
+    .hero-title {
+      margin: 0; font-size: clamp(22px, 2.3vw, 29px); line-height: 1.14;
+      font-weight: 800; letter-spacing: -.028em; color: #142f4d;
+    }
+    .hero-title .accent {
+      background: linear-gradient(92deg, #2f80ed, #8b7cf6);
+      -webkit-background-clip: text; background-clip: text; color: transparent;
+    }
+    .hero-sub { margin: 0; max-width: 560px; font-size: 12px; line-height: 1.55; color: #54708e; }
+    .hero-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 3px; }
+    .hero-chip {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 4px 10px; border-radius: 999px;
+      background: rgba(255, 255, 255, .8); border: 1px solid rgba(86, 184, 255, .42);
+      font-size: 10.5px; color: #4b6c8c;
+      box-shadow: 0 2px 6px rgba(33, 105, 202, .06);
+      backdrop-filter: blur(4px);
+    }
+    .hero-chip b { font-family: "JetBrains Mono", monospace; font-weight: 600; color: var(--accent-deep); }
+
+    /* Notices */
+    .notice {
+      display: flex; align-items: flex-start; gap: 9px;
+      margin-bottom: 14px; padding: 11px 13px;
+      border: 1px solid #cfe6ff; border-radius: 12px;
+      background: linear-gradient(180deg, #f4faff, #ebf6ff);
+      font-size: 12px; color: #2d5d8c;
+    }
+    .notice svg { width: 16px; height: 16px; flex-shrink: 0; margin-top: 1px; color: #5ba4e0; }
+    .notice-error { border-color: #ffd0dc; background: linear-gradient(180deg, #fff5f8, #ffedf2); color: #b84266; }
+
+    .mock-banner {
+      display: flex; align-items: flex-start; gap: 11px;
+      margin-bottom: 16px; padding: 12px 15px;
+      border: 1px solid #ffc9d8; border-radius: 14px;
+      background: linear-gradient(100deg, #fff2f6, #fff8f3);
+      box-shadow: 0 2px 10px rgba(239, 127, 166, .12);
+    }
+    .mock-banner > svg { width: 18px; height: 18px; flex-shrink: 0; margin-top: 1px; color: #e4628d; }
+    .mock-title { margin: 0; font-size: 12px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: #b84266; }
+    .mock-sub { margin: 2px 0 0; font-size: 11.5px; line-height: 1.5; color: #a95874; }
+    .mock-tag {
+      margin-left: auto; flex-shrink: 0;
+      border-radius: 7px; padding: 3px 8px;
+      background: linear-gradient(120deg, #ef7fa6, #f2a95f);
+      color: #fff; font-family: "JetBrains Mono", monospace; font-size: 9.5px; font-weight: 700;
+    }
+    .live-banner {
+      display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
+      margin-bottom: 16px; padding: 10px 15px;
+      border: 1px solid #bfeedd; border-radius: 14px;
+      background: linear-gradient(100deg, #f0fdf8, #f7fffd);
+      font-size: 12px;
+    }
+    .live-dot { position: relative; width: 7px; height: 7px; border-radius: 999px; background: #10b981; flex-shrink: 0; }
+    .live-dot::after {
+      content: ""; position: absolute; inset: -4px; border-radius: 999px;
+      background: rgba(16, 185, 129, .18); animation: live-pulse 2s ease-in-out infinite;
+    }
+    @keyframes live-pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: .35; transform: scale(.85); } }
+
+    /* KPI */
+    .kpi-section { margin-top: 20px; }
+    .section-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px; margin-bottom: 11px; }
+    .section-title { margin: 0; font-size: 10px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; color: #7b93ad; }
+    .section-meta { margin: 0; font-size: 11px; color: #8ba1b8; }
+    .section-meta b { font-family: "JetBrains Mono", monospace; font-weight: 600; color: #54708e; }
+    .kpi-grid { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 13px; }
+    .kpi {
+      position: relative; overflow: hidden;
+      min-height: 108px; padding: 13px 14px;
+      display: flex; flex-direction: column; justify-content: space-between;
+      border: 1px solid rgba(86, 184, 255, .55); border-radius: 16px;
+      background: #fff;
+      box-shadow: 0 5px 16px rgba(33, 105, 202, .09);
+    }
+    .kpi::before {
+      content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 4px;
+      background: linear-gradient(180deg, var(--k-a), var(--k-b));
+    }
+    .kpi::after {
+      content: ""; position: absolute; right: -28px; top: -34px; width: 96px; height: 96px; border-radius: 999px;
+      background: radial-gradient(circle, var(--k-b), transparent 70%); opacity: .38;
+    }
+    .kpi-label {
+      position: relative; display: flex; align-items: flex-start; justify-content: space-between; gap: 6px;
+      font-size: 9.5px; font-weight: 700; letter-spacing: .09em; text-transform: uppercase; color: #7f95ad;
+      line-height: 1.3;
+    }
+    .kpi-icon {
+      width: 25px; height: 25px; flex-shrink: 0;
+      display: grid; place-items: center; border-radius: 9px;
+      background: rgba(255, 255, 255, .8); border: 1px solid rgba(255, 255, 255, .95);
+      color: var(--k-a);
+      box-shadow: 0 3px 8px rgba(33, 105, 202, .12);
+    }
+    .kpi-icon svg { width: 13px; height: 13px; }
+    .kpi-value {
+      position: relative; margin: 7px 0 2px;
+      font-family: "JetBrains Mono", monospace; font-size: 22px; font-weight: 700;
+      line-height: 1; letter-spacing: -.03em; color: #173655;
+    }
+    .kpi-value .unit { margin-left: 3px; font-size: 11px; font-weight: 600; color: #93a9bf; letter-spacing: 0; }
+    .kpi-value .of { font-size: 13px; font-weight: 500; color: #9db1c6; }
+    .kpi-value-sm { display: flex; align-items: center; gap: 7px; font-size: 16px; letter-spacing: -.01em; }
+    .kpi-foot { position: relative; font-size: 10.5px; line-height: 1.4; color: #7f95ad; }
+    .kpi-blue { --k-a: #3f97f0; --k-b: #9ed3ff; background: linear-gradient(150deg, #ffffff 0%, #eef7ff 55%, #dceeff 100%); }
+    .kpi-mint { --k-a: #2fbfa0; --k-b: #a9f0e0; background: linear-gradient(150deg, #ffffff 0%, #effbf7 55%, #d9f6ee 100%); }
+    .kpi-rose { --k-a: #ef7fa6; --k-b: #ffd3e1; background: linear-gradient(150deg, #ffffff 0%, #fff4f8 55%, #ffe4ee 100%); }
+    .kpi-lilac { --k-a: #8b7cf6; --k-b: #d6cffb; background: linear-gradient(150deg, #ffffff 0%, #f6f3ff 55%, #eae4ff 100%); }
+    .kpi-peach { --k-a: #f2a95f; --k-b: #ffe0bd; background: linear-gradient(150deg, #ffffff 0%, #fff9f0 55%, #ffeeda 100%); }
+    .kpi-sky { --k-a: #4aa8e8; --k-b: #bfe6ff; background: linear-gradient(150deg, #ffffff 0%, #f2faff 55%, #e0f3ff 100%); }
+    .conn-dot { width: 8px; height: 8px; border-radius: 999px; flex-shrink: 0; }
+    .conn-dot.is-on { background: #10b981; box-shadow: 0 0 0 3px rgba(16, 185, 129, .18); }
+    .conn-dot.is-off { background: #ef7fa6; box-shadow: 0 0 0 3px rgba(239, 127, 166, .18); }
+    .conn-dot.is-unknown { background: #cbd5e1; }
+    .kpi-note { margin: 10px 0 0; font-size: 11px; color: #8ba1b8; }
+    .kpi-note b { font-family: "JetBrains Mono", monospace; font-weight: 600; color: #54708e; }
+
+    /* Panels */
+    .tab-panel { animation: panelIn .26s ease; }
+    .tab-panel[hidden] { display: none !important; }
+    @keyframes panelIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+    .panel {
+      position: relative;
+      background: var(--card);
+      border: 1px solid rgba(86, 184, 255, .45);
+      border-radius: 20px;
+      box-shadow: var(--shadow);
+      padding: 20px 22px;
+    }
+    .tab-panel > .panel + .panel { margin-top: 16px; }
+    .panel-head { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 10px; }
+    .panel-title { margin: 0; font-size: 16px; font-weight: 800; letter-spacing: -.015em; color: #173655; }
+    .panel-sub { margin: 3px 0 0; font-size: 11.5px; line-height: 1.55; color: var(--muted); }
+    .panel-badges { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+
+    .badge {
+      display: inline-flex; align-items: center; gap: 5px;
+      border-radius: 7px; padding: 3px 8px;
+      font-size: 10px; font-weight: 700; letter-spacing: .02em; white-space: nowrap;
+    }
+    .badge-green { background: #e8faf4; color: #0c8f72; box-shadow: inset 0 0 0 1px rgba(47, 191, 160, .3); }
+    .badge-red { background: #fff0f4; color: #c2426b; box-shadow: inset 0 0 0 1px rgba(239, 127, 166, .3); }
+    .badge-amber { background: #fff6e8; color: #b67a17; box-shadow: inset 0 0 0 1px rgba(242, 169, 95, .35); }
+    .badge-slate { background: #eff7ff; color: #54708e; box-shadow: inset 0 0 0 1px #d9ecff; }
+
+    .callout {
+      display: flex; gap: 9px; align-items: flex-start;
+      margin-top: 12px; padding: 11px 13px;
+      border: 1px solid #dcecfb; border-radius: 12px;
+      background: linear-gradient(180deg, #f7fbff, #f1f8ff);
+      font-size: 12px; line-height: 1.6; color: #466a8d;
+    }
+    .callout svg { width: 16px; height: 16px; flex-shrink: 0; margin-top: 1px; color: #6fa9dd; }
+    .callout-amber { border-color: #ffe2b8; background: linear-gradient(180deg, #fffaf1, #fff5e4); color: #9a6a1d; }
+    .callout-amber svg { color: #d99a3c; }
+
+    /* Toolbar + table */
+    .toolbar {
+      display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
+      margin-top: 14px; padding: 10px 12px;
+      border: 1px solid #e2effc; border-radius: 14px;
+      background: linear-gradient(180deg, #f8fcff, #f2f9ff);
+    }
+    .tool-toggle {
+      display: inline-flex; align-items: center; gap: 7px;
+      padding: 6px 10px; border-radius: 9px;
+      border: 1px solid #dcecfb; background: #fff;
+      font-size: 11.5px; font-weight: 500; color: #54708e; cursor: pointer;
+      box-shadow: 0 1px 3px rgba(33, 105, 202, .05);
+    }
+    .tool-toggle input { width: 14px; height: 14px; accent-color: var(--accent); }
+    .search-wrap { position: relative; flex: 1 1 170px; max-width: 250px; }
+    .search-wrap svg { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); width: 14px; height: 14px; color: #93a9bf; }
+    .search-wrap .field { padding-left: 30px; }
+    .btn-ghost {
+      display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+      padding: 7px 11px; border: 1px solid #dcecfb; border-radius: 9px;
+      background: #fff; color: #54708e; font-size: 11.5px; font-weight: 600;
+      cursor: pointer; box-shadow: 0 1px 3px rgba(33, 105, 202, .05);
+      transition: border-color .15s, color .15s, background-color .15s;
+    }
+    .btn-ghost:hover { border-color: #9cd0ff; color: var(--accent-deep); background: #f5faff; }
+    .btn-dark {
+      display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+      padding: 7px 13px; border: 0; border-radius: 9px;
+      background: linear-gradient(100deg, #25496b, #173655);
+      color: #fff; font-size: 11.5px; font-weight: 700; cursor: pointer;
+      box-shadow: 0 5px 12px rgba(23, 54, 85, .22);
+      transition: transform .15s, box-shadow .15s;
+    }
+    .btn-dark:hover { transform: translateY(-1px); box-shadow: 0 8px 16px rgba(23, 54, 85, .28); }
+    .btn-primary {
+      display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+      padding: 9px 15px; border: 0; border-radius: 10px;
+      background: linear-gradient(100deg, #3f97f0, #8b7cf6);
+      color: #fff; font-size: 12px; font-weight: 700; cursor: pointer;
+      box-shadow: 0 6px 16px rgba(63, 151, 240, .32);
+      transition: transform .15s, box-shadow .15s;
+    }
+    .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 9px 20px rgba(63, 151, 240, .42); }
+    .btn-primary:disabled { cursor: not-allowed; opacity: .45; transform: none; box-shadow: none; }
+    .btn-primary svg { width: 15px; height: 15px; }
+    .btn-outline {
+      display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+      padding: 8px 14px; border: 1px solid #b9dcfb; border-radius: 10px;
+      background: #fff; color: #2d5d8c; font-size: 12px; font-weight: 600; cursor: pointer;
+      transition: border-color .15s, color .15s, background-color .15s;
+    }
+    .btn-outline:hover { border-color: #7cc0f8; color: var(--accent-deep); background: #f5faff; }
+
+    .symbol-count {
+      padding: 5px 9px; border: 1px solid #dcecfb; border-radius: 999px;
+      background: #fff; font-family: "JetBrains Mono", monospace; font-size: 10.5px; color: #54708e;
+    }
+    .symbol-grid {
+      display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 4px;
+      margin-top: 10px; max-height: 170px; overflow-y: auto; padding-right: 4px;
+    }
+    .symbol-option {
+      display: flex; align-items: center; gap: 6px;
+      padding: 4px 7px; border: 1px solid transparent; border-radius: 7px;
+      font-size: 11.5px; color: #54708e; cursor: pointer; transition: all .13s;
+    }
+    .symbol-option:hover { border-color: #d9ecff; background: #f6fbff; }
+    .symbol-option input { width: 13px; height: 13px; accent-color: var(--accent); }
+    .symbol-option span { font-family: "JetBrains Mono", monospace; font-weight: 500; }
+    .hint { margin: 8px 0 0; font-size: 10.5px; color: #9db1c6; }
+
+    .table-shell { margin-top: 12px; overflow: hidden; border: 1px solid #dcecfb; border-radius: 14px; background: #fff; }
+    .table-scroll { max-height: 68vh; overflow: auto; }
+    .table-scroll table { width: 100%; border-collapse: separate; border-spacing: 0; }
+    .table-scroll thead th {
+      position: sticky; top: 0; z-index: 5;
+      background: linear-gradient(180deg, #f5faff, #ecf6ff);
+      box-shadow: inset 0 -1px 0 #d9ecff;
+    }
+    .table-scroll tbody td { border-bottom: 1px solid #f1f7fd; transition: background-color .12s; }
+    .table-scroll tbody tr:last-child td { border-bottom: 0; }
+    .table-scroll tbody tr:hover > td { background: #f6fbff; }
+    .table-scroll tbody tr.row-out > td:not(.reason-cell) { opacity: .55; }
+    .table-scroll tbody tr.row-out > td { background: rgba(239, 127, 166, .035); }
+    .table-scroll tbody tr.row-out:hover > td { background: rgba(239, 127, 166, .07); }
+
+    .rank-pill {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 24px; height: 24px; border-radius: 8px;
+      background: linear-gradient(135deg, #3f97f0, #8b7cf6);
+      color: #fff; font-family: "JetBrains Mono", monospace; font-size: 11px; font-weight: 700;
+      box-shadow: 0 3px 8px rgba(63, 151, 240, .3);
+    }
+    .score-pill {
+      display: inline-flex; align-items: center; justify-content: center;
+      min-width: 52px; padding: 2px 8px; border-radius: 7px;
+      font-family: "JetBrains Mono", monospace; font-size: 11.5px; font-weight: 600;
+    }
+    .score-high { background: #e7faf3; color: #0c8f72; box-shadow: inset 0 0 0 1px rgba(47, 191, 160, .28); }
+    .score-mid { background: #eaf5ff; color: #1d6fc4; box-shadow: inset 0 0 0 1px rgba(63, 151, 240, .28); }
+    .score-low { background: #fff6e8; color: #b67a17; box-shadow: inset 0 0 0 1px rgba(242, 169, 95, .35); }
+    .score-weak { background: #fff0f4; color: #c2426b; box-shadow: inset 0 0 0 1px rgba(239, 127, 166, .3); }
+    .reason-pill {
+      display: inline-block; max-width: 280px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+      padding: 2px 8px; border-radius: 7px;
+      background: #fff0f4; color: #c2426b; font-size: 11px; font-weight: 500;
+      box-shadow: inset 0 0 0 1px rgba(239, 127, 166, .22);
+    }
+    .symbol-jump {
+      border: 0; background: none; padding: 0; cursor: pointer;
+      font-family: "JetBrains Mono", monospace; font-size: 12.5px; font-weight: 700; color: #1d6fc4;
+      transition: color .13s;
+    }
+    .symbol-jump:hover { color: #142f4d; text-decoration: underline; text-underline-offset: 2px; }
+
+    /* Charts */
+    .chart-card {
+      margin-top: 14px; padding: 10px 12px 6px;
+      border: 1px solid #e0eefc; border-radius: 14px;
+      background: linear-gradient(180deg, #fcfdff, #f7fbff);
+    }
+    .chart-card-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 6px; padding: 2px 4px 0; }
+    .chart-card-head p { margin: 0; font-size: 10px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: #8ba1b8; }
+    .chart-hint { font-size: 10.5px; color: #9db1c6; font-weight: 500; letter-spacing: 0; text-transform: none; }
+    .chart { width: 100%; min-height: 240px; }
+    .chart .modebar { display: none !important; }
+
+    /* Details */
+    .detail-badge { display: flex; align-items: center; gap: 8px; }
+    .detail-symbol { font-family: "JetBrains Mono", monospace; font-size: 19px; font-weight: 700; letter-spacing: -.02em; color: #142f4d; }
+    .detail-controls { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr) auto; gap: 10px; align-items: end; margin-top: 14px; }
+    .metric-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-top: 12px; }
+    .metric-card { border: 1px solid #e0eefc; border-radius: 12px; padding: 11px 13px; background: linear-gradient(160deg, #fff, #f7fbff); }
+    .metric-card span { font-size: 9.5px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: #93a9bf; }
+    .metric-card p { margin: 6px 0 0; font-family: "JetBrains Mono", monospace; font-size: 17px; font-weight: 700; color: #173655; }
+    .chart-pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 12px; }
+    .chart-pair .chart-card { margin-top: 0; }
+
+    /* Forward test */
+    .info-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 14px; }
+    .info-card { border: 1px solid #e0eefc; border-radius: 12px; padding: 12px 14px; background: linear-gradient(160deg, #fff, #f7fbff); }
+    .info-card .k { font-size: 9.5px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: #93a9bf; }
+    .info-card p { margin: 6px 0 0; font-size: 12px; line-height: 1.6; color: #5b7694; }
+    .freeze-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 14px; }
+    .run-card { margin-top: 12px; border: 1px solid #e0eefc; border-radius: 14px; padding: 14px; background: #fff; box-shadow: 0 2px 8px rgba(33, 105, 202, .05); }
+    .run-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+    .run-id { font-family: "JetBrains Mono", monospace; font-size: 12.5px; font-weight: 700; color: #173655; }
+    .run-metrics { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin-top: 12px; }
+    .mini-stat { border: 1px solid #e6f2ff; border-radius: 10px; padding: 9px 11px; background: #f8fcff; }
+    .mini-stat span { display: block; font-size: 9px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: #93a9bf; line-height: 1.35; }
+    .mini-stat p { margin: 5px 0 0; font-family: "JetBrains Mono", monospace; font-size: 16px; font-weight: 700; color: #173655; }
+    .pos { color: #0c8f72 !important; }
+    .neg { color: #c2426b !important; }
+    .summary-card { margin-top: 14px; border: 1px solid #e0eefc; border-radius: 14px; padding: 14px; background: linear-gradient(160deg, #fbfdff, #f4faff); }
+    .summary-card h3 { margin: 0; font-size: 10px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: #8ba1b8; }
+    .summary-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-top: 10px; }
+    .summary-grid span { display: block; font-size: 9.5px; letter-spacing: .06em; text-transform: uppercase; color: #93a9bf; }
+    .summary-grid p { margin: 4px 0 0; font-family: "JetBrains Mono", monospace; font-size: 16px; font-weight: 700; color: #173655; }
+    .caveat { margin-top: 10px; border: 1px solid #ffe2b8; border-radius: 10px; padding: 8px 12px; background: #fff8ea; font-size: 11.5px; line-height: 1.6; color: #9a6a1d; }
+    .empty-hint { margin-top: 14px; border: 1px dashed #c7ddf3; border-radius: 12px; padding: 22px 16px; background: #f8fcff; text-align: center; font-size: 12px; color: #7f95ad; }
+    .empty-hint code { border-radius: 6px; background: #fff; padding: 2px 6px; font-family: "JetBrains Mono", monospace; font-size: 10.5px; color: #54708e; box-shadow: inset 0 0 0 1px #dcecfb; }
+
+    /* Quality */
+    .quality-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin-top: 14px; }
+    .subhead { margin: 0 0 8px; font-size: 10px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: #8ba1b8; }
+    .table-shell.small { margin-top: 0; }
+    .table-shell.small .table-scroll { max-height: 320px; }
+    .flag-list { display: flex; flex-wrap: wrap; gap: 7px; }
+    .flag-pill {
+      display: inline-flex; align-items: center; gap: 7px;
+      padding: 5px 10px; border: 1px solid #dcecfb; border-radius: 9px;
+      background: #fff; font-size: 11.5px; color: #54708e;
+      box-shadow: 0 1px 3px rgba(33, 105, 202, .05);
+    }
+    .flag-pill b { border-radius: 6px; padding: 1px 6px; background: #eef6ff; font-family: "JetBrains Mono", monospace; font-size: 10.5px; color: var(--accent-deep); }
+    .collector-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 9px; }
+    .collector-card { border: 1px solid #e0eefc; border-radius: 11px; padding: 10px 12px; background: #fff; }
+    .collector-card .k { display: block; font-size: 9px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: #93a9bf; }
+    .collector-card .v { display: block; margin-top: 5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: "JetBrains Mono", monospace; font-size: 11.5px; color: #31577c; }
+    .collector-card .v.is-err { color: #c2426b; }
+
+    /* Method */
+    .method-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 14px; }
+    .method-card { border: 1px solid #e0eefc; border-radius: 13px; padding: 13px 14px; background: linear-gradient(160deg, #fff, #f8fbff); }
+    .method-head { display: flex; align-items: center; gap: 8px; }
+    .step-badge {
+      width: 20px; height: 20px; flex-shrink: 0;
+      display: grid; place-items: center; border-radius: 7px;
+      background: linear-gradient(135deg, #3f97f0, #8b7cf6);
+      color: #fff; font-family: "JetBrains Mono", monospace; font-size: 10px; font-weight: 700;
+      box-shadow: 0 3px 8px rgba(63, 151, 240, .3);
+    }
+    .method-card h3 { margin: 0; font-size: 12.5px; font-weight: 700; color: #173655; }
+    .method-card p { margin: 8px 0 0; font-size: 12px; line-height: 1.65; color: #5b7694; }
+    .gate-chips { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
+    .gate-chip { border-radius: 7px; padding: 2px 8px; background: #f3f9ff; font-size: 10.5px; color: #54708e; box-shadow: inset 0 0 0 1px #dcecfb; }
+    .formula {
+      margin-top: 8px; border-radius: 9px; padding: 7px 10px;
+      background: linear-gradient(100deg, #16324f, #1f4466);
+      color: #dbeafe; font-family: "JetBrains Mono", monospace; font-size: 11px;
+      overflow-x: auto; white-space: nowrap;
+    }
+    .limits-card { margin-top: 13px; border: 1px solid #ffe2b8; border-radius: 13px; padding: 12px 14px; background: linear-gradient(160deg, #fffaf1, #fff5e4); }
+    .limits-card .k { font-size: 9.5px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: #b67a17; }
+    .limits-card p { margin: 6px 0 0; font-size: 12px; line-height: 1.65; color: #8a6420; }
+    .method-note { margin: 13px 0 0; font-size: 11.5px; line-height: 1.6; color: #8ba1b8; }
+
+    .page-footer { margin-top: 22px; padding-top: 14px; border-top: 1px solid rgba(86, 184, 255, .3); font-size: 11px; color: #8ba1b8; }
+    .page-footer b { color: #54708e; }
+
+    /* No-data + empty */
+    .no-data-panel { display: flex; gap: 13px; align-items: flex-start; margin-top: 18px; }
+    .no-data-icon {
+      width: 42px; height: 42px; flex-shrink: 0;
+      display: grid; place-items: center; border-radius: 13px;
+      background: linear-gradient(135deg, #fff6e8, #ffeeda); color: #d99a3c;
+      box-shadow: inset 0 0 0 1px rgba(242, 169, 95, .3);
+    }
+    .no-data-icon svg { width: 21px; height: 21px; }
+    .no-data-panel h2 { margin: 0; font-size: 15px; font-weight: 800; color: #173655; }
+    .no-data-panel p { margin: 5px 0 0; font-size: 12.5px; line-height: 1.6; color: #5b7694; }
+    .no-data-meta { margin: 8px 0 0; font-family: "JetBrains Mono", monospace; font-size: 11.5px; color: #8ba1b8; }
+
+    .empty-shell { min-height: 100vh; display: flex; flex-direction: column; }
+    .empty-head { border-bottom: 1px solid rgba(86, 184, 255, .35); background: rgba(255, 255, 255, .8); backdrop-filter: blur(8px); }
+    .empty-head-inner { max-width: 1120px; margin: 0 auto; display: flex; align-items: center; gap: 11px; padding: 14px 20px; }
+    .empty-head-disclaimer { margin-left: auto; font-size: 11px; color: #9db1c6; }
+    .empty-main { flex: 1; display: grid; place-items: center; padding: 40px 20px; }
+    .empty-card {
+      width: 100%; max-width: 520px; padding: 34px; text-align: center;
+      border: 1px solid rgba(86, 184, 255, .5); border-radius: 24px;
+      background: #fff; box-shadow: var(--shadow);
+    }
+    .empty-icon {
+      width: 56px; height: 56px; margin: 0 auto;
+      display: grid; place-items: center; border-radius: 18px;
+      background: linear-gradient(135deg, #eaf5ff, #f0ecff);
+      border: 1px solid #d6e9fb; color: var(--accent);
+    }
+    .empty-icon svg { width: 28px; height: 28px; }
+    .empty-card h1 { margin: 16px 0 0; font-size: 21px; font-weight: 800; letter-spacing: -.02em; color: #142f4d; }
+    .empty-card > p { margin: 8px auto 0; max-width: 400px; font-size: 13px; line-height: 1.7; color: var(--muted); }
+    .empty-message { margin-top: 18px; padding: 11px 13px; border: 1px solid #cfe6ff; border-radius: 11px; background: #f2f9ff; text-align: left; font-size: 12px; color: #2d5d8c; }
+    .empty-error { margin-top: 18px; padding: 11px 13px; border: 1px solid #ffd0dc; border-radius: 11px; background: #fff5f8; text-align: left; font-size: 12px; color: #b84266; }
+    .btn-promo {
+      width: 100%; margin-top: 20px;
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+      padding: 12px 18px; border: 0; border-radius: 12px;
+      background: linear-gradient(100deg, #3f97f0, #8b7cf6);
+      color: #fff; font-size: 13.5px; font-weight: 700; cursor: pointer;
+      box-shadow: 0 8px 20px rgba(63, 151, 240, .34);
+      transition: transform .16s, box-shadow .16s;
+    }
+    .btn-promo:hover { transform: translateY(-1px); box-shadow: 0 12px 26px rgba(63, 151, 240, .44); }
+    .btn-promo svg { width: 16px; height: 16px; }
+    .empty-db { margin: 16px 0 0; font-family: "JetBrains Mono", monospace; font-size: 10.5px; color: #9db1c6; word-break: break-all; }
+    .empty-foot { margin: 20px 0 0; padding-top: 16px; border-top: 1px solid #eef4fb; font-size: 11px; line-height: 1.6; color: #9db1c6; }
+
+    /* ============ RESPONSIVE ============ */
+    .sidebar-overlay { display: none; }
+    @media (max-width: 1360px) {
+      .kpi-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    }
+    @media (max-width: 1200px) {
+      .symbol-grid { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+      .run-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .collector-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    @media (max-width: 1023px) {
+      .app-sidebar {
+        width: 300px;
+        transform: translateX(-100%);
+        transition: transform .3s cubic-bezier(.4, 0, .2, 1);
+        box-shadow: 18px 0 44px rgba(20, 47, 77, .2);
+      }
+      body.sidebar-open .app-sidebar { transform: none; }
+      body.sidebar-open { overflow: hidden; }
+      .app-main { margin-left: 0; }
+      .mobile-bar { display: flex; }
+      .app-content { padding: 18px 16px 28px; }
+      .sidebar-overlay {
+        display: block; position: fixed; inset: 0; z-index: 55;
+        background: rgba(16, 42, 67, .35); backdrop-filter: blur(3px);
+        opacity: 0; pointer-events: none; transition: opacity .25s;
+      }
+      body.sidebar-open .sidebar-overlay { opacity: 1; pointer-events: auto; }
+      .hero {
+        height: auto; min-height: 180px;
+        background-image: linear-gradient(100deg, rgba(224, 239, 255, .985) 0%, rgba(224, 239, 255, .95) 54%, rgba(224, 239, 255, .5) 100%), var(--hero-photo-tab), var(--hero-photo);
+      }
+      .chart-pair, .quality-grid { grid-template-columns: 1fr; }
+      .sidephoto { min-height: 150px; }
+    }
+    @media (max-width: 760px) {
+      .hero { padding: 21px 18px; border-radius: 18px; }
+      .hero-title { font-size: 22px; }
+      .hero-sub { font-size: 11.5px; }
+      .kpi-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+      .panel { padding: 16px 14px; border-radius: 16px; }
+      .info-grid, .method-grid { grid-template-columns: 1fr; }
+      .metric-grid, .summary-grid { grid-template-columns: 1fr; }
+      .detail-controls { grid-template-columns: 1fr; }
+      .symbol-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+      .search-wrap { max-width: none; }
+      .btn-dark { margin-left: 0; }
+      .section-meta { font-size: 10.5px; }
+      .empty-head-disclaimer { display: none; }
+      .toolbar { padding: 9px; }
+    }
+    @media (max-width: 460px) {
+      .kpi-grid { grid-template-columns: 1fr; }
+      .symbol-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      .capital-presets { width: 100%; }
+    }
+    @media print {
+      .app-sidebar, .mobile-bar, .sidebar-overlay { display: none !important; }
+      .app-main { margin-left: 0; }
+      .hero, .panel { box-shadow: none; }
     }
   </style>
 </head>
-<body>
-  <header>
-    <h1>{{ title }}</h1>
-    <p>{{ subtitle | default("Công cụ phân tích học thuật cho dữ liệu chứng khoán và chi phí thực thi.") }}</p>
-  </header>
-  <main class="wrap">
-    <div class="notice info">{{ disclaimer }}</div>
-    {% if message %}<div class="notice info">{{ message }}</div>{% endif %}
-    {% if error %}<div class="notice error">{{ error }}</div>{% endif %}
+<body data-tab="ranking">
 
-    {% if empty %}
-      <section class="panel">
-        <h2>Chưa có dữ liệu</h2>
+{% set NUMERIC_COLS = [
+  'Hạng', 'Điểm 0-100', 'Điểm ròng', 'Điểm yếu tố', 'Chi phí P50 (bps)', 'Chi phí P90 (bps)',
+  'Độ phủ sổ lệnh (x vốn)', '% snapshot vượt độ sâu', 'Vốn/GTGD TB (%)', 'RVOL', 'OBI', 'Động lượng (%)'
+] %}
+{% set COL_HINTS = {
+  'Hạng': 'Thứ hạng sau khi sắp xếp theo điểm ròng',
+  'Mã': 'Mã cổ phiếu — bấm để chuyển sang tab Chi tiết mã',
+  'Điểm 0-100': 'Điểm tổng hợp chuẩn hóa về thang 0-100',
+  'Điểm ròng': 'z(điểm yếu tố) − λ·z(chi phí P90)',
+  'Điểm yếu tố': 'Trung bình có trọng số của các yếu tố đã chuẩn hóa',
+  'Chi phí P50 (bps)': 'Trung vị chi phí vòng trong cửa sổ lọc',
+  'Chi phí P90 (bps)': 'Phân vị 90 chi phí vòng trong cửa sổ lọc',
+  'Độ phủ sổ lệnh (x vốn)': 'Khối lượng 3 mức sổ lệnh chia cho vốn lệnh (trung vị)',
+  '% snapshot vượt độ sâu': 'Tỷ lệ snapshot mà lệnh vượt quá độ sâu 3 mức',
+  'Vốn/GTGD TB (%)': 'Vốn lệnh so với giá trị giao dịch trung bình ngày',
+  'RVOL': 'Khối lượng tương đối theo thời điểm trong phiên',
+  'OBI': 'Mất cân bằng sổ lệnh 3 mức',
+  'Động lượng (%)': 'Lợi suất tham chiếu so với giá mở cửa',
+  'Lý do loại': 'Mã bị loại bởi bộ lọc cứng nào'
+} %}
+{% set FACTOR_LABELS = {
+  'mom_ref': 'Động lượng tham chiếu',
+  'range_pos': 'Vị trí trong biên độ phiên',
+  'rvol_tod': 'RVOL theo thời điểm',
+  'obi3': 'Mất cân bằng sổ lệnh 3 mức',
+  'range_pct': 'Biên độ phiên (%)',
+  'foreign_net': 'Khối ngoại ròng'
+} %}
+{% set COVERAGE_LABELS = {
+  'trade_date': 'Ngày', 'rows': 'Số dòng', 'symbols': 'Số mã',
+  'first': 'Snapshot đầu', 'last': 'Snapshot cuối'
+} %}
+{% set QUALITY_LABELS = {'trade_date': 'Ngày', 'source': 'Nguồn', 'issue': 'Sự cố', 'n': 'Số lần'} %}
+{% set ISSUE_LABELS = {
+  'FUTURE_TS': 'Dấu thời gian tương lai', 'BAD_TS': 'Dấu thời gian lỗi', 'DUPLICATE': 'Bản ghi trùng',
+  'OUT_OF_ORDER': 'Sai thứ tự thời gian', 'NEG_VALUE': 'Giá trị âm', 'NO_SYMBOL': 'Thiếu mã',
+  'NO_QUOTE': 'Thiếu chào mua/bán', 'NONCONT': 'Ngoài phiên liên tục', 'LATE': 'Dữ liệu trễ'
+} %}
+{% set FLAG_LABELS = {
+  'NO_QUOTE': 'Thiếu chào mua/bán', 'NONCONT': 'Ngoài phiên liên tục', 'LATE': 'Dữ liệu trễ',
+  'FUTURE_TS': 'Dấu thời gian tương lai', 'DUPLICATE': 'Bản ghi trùng', 'BAD_TS': 'Dấu thời gian lỗi',
+  'OUT_OF_ORDER': 'Sai thứ tự', 'NEG_VALUE': 'Giá trị âm', 'NO_SYMBOL': 'Thiếu mã'
+} %}
+{% set STATUS_LABELS = {
+  'connected': 'Kết nối', 'last_msg_ts': 'Bản tin gần nhất', 'msgs': 'Số bản tin',
+  'source': 'Nguồn', 'last_error': 'Lỗi gần nhất'
+} %}
+
+{% if empty %}
+  <div class="empty-shell">
+    <header class="empty-head">
+      <div class="empty-head-inner">
+        <div class="brand-logo">ES</div>
+        <div>
+          <p class="brand-name">ExecScreen</p>
+          <p class="brand-sub">Bộ lọc cổ phiếu theo quy mô vốn</p>
+        </div>
+        <span class="empty-head-disclaimer">{{ disclaimer }}</span>
+      </div>
+    </header>
+    <main class="empty-main">
+      <div class="empty-card">
+        <div class="empty-icon">
+          <svg fill="none" viewBox="0 0 24 24" stroke-width="1.7" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3 13.5 8 8l3.5 3.5L21 3m0 0h-5.25M21 3v5.25M3 21h18"/>
+          </svg>
+        </div>
+        <h1>Chưa có dữ liệu</h1>
         <p>Chưa có dữ liệu trong cơ sở dữ liệu. Chạy bộ thu thập hoặc tạo dữ liệu mô phỏng để thử giao diện.</p>
+        {% if message %}
+          <div class="empty-message">{{ message }}</div>
+        {% endif %}
+        {% if error %}
+          <div class="empty-error">{{ error }}</div>
+        {% endif %}
         <form method="post" action="/">
-          <button type="submit" name="action" value="generate_demo">Tạo dữ liệu mô phỏng (10 phiên, 50 mã)</button>
+          <button type="submit" name="action" value="generate_demo" class="btn-promo">
+            <svg fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/>
+            </svg>
+            Tạo dữ liệu mô phỏng (10 phiên, 50 mã)
+          </button>
         </form>
-        <p class="muted">Cơ sở dữ liệu: {{ db_path }}</p>
-      </section>
-    {% else %}
-      <form method="post" action="/" id="controls">
-        <section class="panel" id="settings">
-          <h2>Tham số phân tích</h2>
-          <div class="settings">
-            <label>Vốn cho một lệnh (triệu VND)
-              <input type="number" name="capital_m" min="10" max="100000" step="10" value="{{ capital_m }}">
-            </label>
-            <label>Ngày phân tích
-              <select name="date">
-                {% for day in dates %}
-                  <option value="{{ day }}" {% if day == selected_date %}selected{% endif %}>{{ day }}</option>
-                {% endfor %}
-              </select>
-            </label>
-            <label>Thời điểm phân tích (giờ VN)
-              <input type="time" name="time" value="{{ selected_time }}">
-            </label>
-            <label>Yêu cầu nhanh (quy tắc, không dùng AI)
-              <input type="text" name="nl" value="{{ nl | default('') }}" placeholder="vốn 300 triệu, top 8, ưu tiên khối lượng">
-            </label>
+        <p class="empty-db">Cơ sở dữ liệu: {{ db_path }}</p>
+        <p class="empty-foot">{{ disclaimer }}</p>
+      </div>
+    </main>
+  </div>
+{% else %}
+
+  <div id="sidebar-overlay" class="sidebar-overlay"></div>
+
+  <!-- ===================== SIDEBAR ===================== -->
+  <aside id="app-sidebar" class="app-sidebar" aria-label="Điều khiển phân tích">
+    <div class="brand">
+      <div class="brand-logo">ES</div>
+      <div>
+        <p class="brand-name">ExecScreen</p>
+        <p class="brand-sub">Bộ lọc cổ phiếu theo quy mô vốn</p>
+      </div>
+    </div>
+
+    {% if not no_ranked %}
+      <nav class="side-nav" aria-label="Điều hướng nội dung">
+        <p class="side-label">Bảng phân tích</p>
+        {% for target, label in tabs %}
+          <a href="#{{ target }}" data-tab-target="{{ target }}" data-tab-label="{{ label }}" class="side-link {% if loop.first %}tab-active{% endif %}">
+            {% if target == 'ranking' %}
+              <svg fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75ZM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V8.625ZM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V4.125Z"/></svg>
+            {% elif target == 'details' %}
+              <svg fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3.75v16.5h16.5M7.5 15.75v-4.5m4.5 4.5v-8.25m4.5 8.25v-6m-10.5 9h12"/></svg>
+            {% elif target == 'forward-test' %}
+              <svg fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
+            {% elif target == 'quality' %}
+              <svg fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z"/></svg>
+            {% else %}
+              <svg fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 0 1 6 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 0 1 6-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0 0 18 18a8.967 8.967 0 0 0-6 2.292m0-14.25v14.25"/></svg>
+            {% endif %}
+            <span class="side-link-label">{{ label }}</span>
+          </a>
+        {% endfor %}
+      </nav>
+    {% endif %}
+
+    <!-- ===================== PARAMETERS ===================== -->
+    <form id="controls" method="post" action="/" class="side-form">
+      <p class="side-label site-label">Tham số phân tích</p>
+
+      <div class="side-block">
+        <label for="capital-input" class="field-label">Vốn cho một lệnh (triệu VND)</label>
+        <div class="capital-row">
+          <div class="capital-input-wrap">
+            <input id="capital-input" type="number" name="capital_m" min="10" max="100000" step="10" value="{{ "%g"|format(capital_m) }}" class="field capital-field">
+            <span class="capital-suffix">tr</span>
           </div>
-          {% if nl_preview %}
-            <p class="muted">Tham số được dịch từ yêu cầu nhanh; kiểm tra trước khi áp dụng:</p>
-            <pre>{{ nl_preview }}</pre>
-          {% endif %}
-          <label class="check"><input type="checkbox" name="apply_nl" {% if apply_nl %}checked{% endif %}> Áp dụng yêu cầu nhanh</label>
-          <details>
-            <summary>Trọng số yếu tố & phạt chi phí</summary>
-            <div class="factor-grid">
-              {% for name, spec in factors.items() %}
-                <label class="factor">{{ name }}
+          <div class="capital-presets">
+            {% for preset in [100, 200, 500, 1000] %}
+              <button type="button" data-capital="{{ preset }}" class="capital-chip">{{ preset }}tr</button>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+
+      <div class="side-block field-grid">
+        <label>
+          <span class="field-label">Ngày phân tích</span>
+          <select name="date" class="field">
+            {% for day in dates %}
+              <option value="{{ day }}" {% if day == selected_date %}selected{% endif %}>{{ day }}</option>
+            {% endfor %}
+          </select>
+        </label>
+        <label>
+          <span class="field-label">Thời điểm (VN)</span>
+          <input type="time" name="time" value="{{ selected_time }}" class="field">
+        </label>
+      </div>
+
+      <div class="side-block">
+        <label for="nl-input" class="field-label">Yêu cầu nhanh (quy tắc, không dùng AI)</label>
+        <input id="nl-input" type="text" name="nl" value="{{ nl | default('') }}" placeholder="vốn 300 triệu, top 8, ưu tiên khối lượng" class="field">
+        <label class="apply-row">
+          <input type="checkbox" name="apply_nl" {% if apply_nl %}checked{% endif %}>
+          Áp dụng yêu cầu nhanh
+        </label>
+      </div>
+
+      <div class="side-block">
+        <details class="weights">
+          <summary>
+            <svg fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 1 1-3 0m3 0a1.5 1.5 0 1 0-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-9.75 0h9.75"/></svg>
+            <span>Trọng số yếu tố &amp; phạt chi phí</span>
+            <svg class="chev" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m6 9 6 6 6-6"/></svg>
+          </summary>
+          <div class="weights-body">
+            {% for name, spec in factors.items() %}
+              <div class="weight-row">
+                <div class="weight-head">
+                  <span>{{ FACTOR_LABELS.get(name, name) }}</span>
                   <output for="weight-{{ loop.index }}">{{ "%.1f"|format(spec.weight) }}</output>
-                  <input id="weight-{{ loop.index }}" type="range" min="0" max="3" step="0.1" name="weight__{{ name }}" value="{{ spec.weight if spec.enabled else 0 }}" oninput="this.previousElementSibling.value=Number(this.value).toFixed(1)">
-                </label>
-              {% endfor %}
-              <label class="factor">λ phạt chi phí
-                <output>{{ "%.1f"|format(cost_penalty_lambda) }}</output>
-                <input type="range" min="0" max="2" step="0.1" name="cost_penalty_lambda" value="{{ cost_penalty_lambda }}" oninput="this.previousElementSibling.value=Number(this.value).toFixed(1)">
-              </label>
-            </div>
-          </details>
-          <p class="muted">Múi giờ: {{ timezone }} (UTC+7). Yếu tố có trọng số 0 sẽ bị tắt.</p>
-          <div class="actions"><button type="submit" name="action" value="refresh">Cập nhật phân tích</button></div>
-        </section>
-      </form>
-
-      {% if no_ranked %}
-        <div class="notice warn">Không có dữ liệu tại thời điểm đã chọn (có thể trước giờ mở cửa hoặc chưa có snapshot).</div>
-      {% else %}
-        {% if is_mock %}<div class="mock-banner">⚠ DỮ LIỆU MÔ PHỎNG (source=mock): chỉ để thử giao diện, KHÔNG phải dữ liệu thị trường thật.</div>{% endif %}
-        <nav aria-label="Điều hướng nội dung">
-          {% for target, label in tabs %}<a href="#{{ target }}">{{ label }}</a>{% endfor %}
-        </nav>
-
-        <section class="panel" id="ranking">
-          <h2>Xếp hạng cổ phiếu</h2>
-          <div class="metrics">
-            <div class="metric"><span>Mã đủ điều kiện</span><strong>{{ eligible_count }}/{{ ranked_count }}</strong></div>
-            <div class="metric"><span>Chi phí vòng P50 trung vị (bps)</span><strong>{{ median_cost }}</strong></div>
-            <div class="metric"><span>Bị loại vì vượt độ sâu 3 mức</span><strong>{{ beyond_count }}</strong></div>
-            <div class="metric"><span>Độ rộng: tăng / giảm</span><strong>{{ market_breadth }}</strong></div>
-            <div class="metric"><span>Dữ liệu cập nhật lần cuối</span><strong>{{ updated_at }}</strong></div>
-            <div class="metric"><span>Tuổi dữ liệu</span><strong>{{ age_text }}</strong></div>
-            <div class="metric"><span>Kết nối thu thập</span><strong>{{ connection_text }}</strong></div>
-          </div>
-          <p class="muted">Ngưỡng chi phí P90: <strong>{{ threshold }} bps</strong> ({{ calibration_text }}).</p>
-          <label class="check"><input form="controls" type="checkbox" name="show_out" {% if show_out %}checked{% endif %} onchange="this.form.requestSubmit()"> Hiện cả mã bị loại (kèm lý do)</label>
-          <label style="max-width:400px;margin:12px 0">Lọc theo mã (có thể chọn nhiều)
-            <select form="controls" name="symbols" multiple>
-              {% for symbol in ranked_symbols %}
-                <option value="{{ symbol }}" {% if symbol in selected_symbols %}selected{% endif %}>{{ symbol }}</option>
-              {% endfor %}
-            </select>
-          </label>
-          <div class="actions"><button form="controls" type="submit" name="action" value="refresh">Áp dụng bộ lọc mã</button></div>
-          <div class="table-wrap">
-            <table>
-              <thead><tr>{% for column in ranking_table.columns %}<th>{{ column }}</th>{% endfor %}</tr></thead>
-              <tbody>
-                {% for row in ranking_table.rows %}
-                  <tr>{% for cell in row %}<td>{{ cell }}</td>{% endfor %}</tr>
-                {% else %}<tr><td colspan="{{ ranking_table.columns|length }}">Không có mã phù hợp bộ lọc.</td></tr>{% endfor %}
-              </tbody>
-            </table>
-          </div>
-          <div id="chart-ranking" class="chart"></div>
-          <script type="application/json" data-chart="chart-ranking">{{ ranking_chart | tojson }}</script>
-        </section>
-
-        <section class="panel" id="details">
-          <h2>Chi tiết mã & mô phỏng duyệt sổ lệnh</h2>
-          <div class="settings">
-            <label>Chọn mã
-              <select form="controls" name="symbol">
-                {% for symbol in detail_pool %}
-                  <option value="{{ symbol }}" {% if symbol == detail.symbol %}selected{% endif %}>{{ symbol }}</option>
-                {% endfor %}
-              </select>
-            </label>
-            <label>Chiều lệnh minh họa
-              <select form="controls" name="side">
-                <option {% if selected_side == "Mua" %}selected{% endif %}>Mua</option>
-                <option {% if selected_side == "Bán" %}selected{% endif %}>Bán</option>
-              </select>
-            </label>
-          </div>
-          <div class="actions"><button form="controls" type="submit" name="action" value="refresh">Xem chi tiết</button></div>
-          <p>{{ detail.explanation }}</p>
-          {% if detail.warning %}<div class="notice warn">{{ detail.warning }}</div>{% endif %}
-          {% if detail.metrics %}
-            <div class="metrics">
-              {% for label, value in detail.metrics %}<div class="metric"><span>{{ label }}</span><strong>{{ value }}</strong></div>{% endfor %}
-            </div>
-          {% endif %}
-          {% if detail.charts.contribution %}
-            <div id="chart-contribution" class="chart"></div>
-            <script type="application/json" data-chart="chart-contribution">{{ detail.charts.contribution | tojson }}</script>
-          {% endif %}
-          {% if detail.charts.depth %}
-            <div id="chart-depth" class="chart"></div>
-            <script type="application/json" data-chart="chart-depth">{{ detail.charts.depth | tojson }}</script>
-            <div id="chart-cost" class="chart"></div>
-            <script type="application/json" data-chart="chart-cost">{{ detail.charts.cost | tojson }}</script>
-          {% endif %}
-        </section>
-
-        <section class="panel" id="forward-test">
-          <h2>Forward-test giả lập</h2>
-          <p><strong>Không đặt lệnh thật.</strong> Chốt danh sách tại thời điểm đang chọn, sau đó đánh giá bằng giá vào/ra lấy từ sổ lệnh ở các phiên sau, đã trừ phí và thuế.</p>
-          <p class="muted">Phiên hiệu chỉnh ngưỡng: {{ calibration_dates }}. Các phiên sau dùng ngưỡng đã cố định.</p>
-          <button form="controls" type="submit" name="action" value="freeze" {% if eligible_count == 0 %}disabled{% endif %}>Chốt danh sách tại thời điểm đang chọn</button>
-          {% if not forward_results %}
-            <p class="muted">Chưa có lần chốt nào. Có thể dùng scripts/freeze_picks.py để chốt mỗi phiên tại giờ cố định.</p>
-          {% else %}
-            {% for result in forward_results %}
-              <div class="result">
-                <strong>{{ result.run_id }} — {{ result.status }}</strong>
-                {% if result.reason %}<p>{{ result.reason }}</p>{% endif %}
-                {% if result.status == "OK" %}
-                  <div class="metrics">
-                    <div class="metric"><span>Lợi suất ròng TB (top-N)</span><strong>{{ "%.2f"|format(result.mean_net_pick * 100) }}%</strong></div>
-                    <div class="metric"><span>Vượt trội so với mọi mã đủ điều kiện</span><strong>{{ "%.2f"|format(result.excess_vs_eligible * 100) }}%</strong></div>
-                    <div class="metric"><span>IC hạng</span><strong>{{ "%.2f"|format(result.rank_ic) }}</strong></div>
-                    <div class="metric"><span>Hạng phần trăm so với chọn ngẫu nhiên</span><strong>{{ "%.0f"|format(result.random_pctile * 100) }}</strong></div>
-                  </div>
-                  <div id="chart-forward-{{ loop.index }}" class="chart"></div>
-                  <script type="application/json" data-chart="chart-forward-{{ loop.index }}">{{ result.chart | tojson }}</script>
-                {% endif %}
+                </div>
+                <input id="weight-{{ loop.index }}" type="range" min="0" max="3" step="0.1" name="weight__{{ name }}"
+                       value="{{ spec.weight if spec.enabled else 0 }}"
+                       oninput="this.closest('.weight-row').querySelector('output').value=Number(this.value).toFixed(1)">
               </div>
             {% endfor %}
-          {% endif %}
-          {% if summary.get("n_runs") %}
-            <h3>Tổng hợp</h3>
-            <p>Số lần chốt đã đánh giá: {{ summary.n_runs }}; vượt trội TB {{ "%.2f"|format(summary.mean_excess * 100) }}%;
-              khoảng tin cậy 95% bootstrap [{{ "%.2f"|format(summary.ci95[0] * 100) }}%, {{ "%.2f"|format(summary.ci95[1] * 100) }}%].</p>
-            <div class="notice warn">{{ summary.caveat }}</div>
-          {% endif %}
-        </section>
-
-        <section class="panel" id="quality">
-          <h2>Chất lượng dữ liệu</h2>
-          <h3>Phủ dữ liệu theo ngày</h3>
-          <div class="table-wrap">
-            <table><thead><tr>{% for column in coverage.columns %}<th>{{ column }}</th>{% endfor %}</tr></thead>
-              <tbody>{% for row in coverage.rows %}<tr>{% for cell in row %}<td>{{ cell }}</td>{% endfor %}</tr>{% endfor %}</tbody>
-            </table>
-          </div>
-          <p class="muted">Nguồn dữ liệu trong cơ sở: {{ sources_text }}.</p>
-          <h3>Sự cố chất lượng đã ghi nhận</h3>
-          {% if quality.rows %}
-            <div class="table-wrap">
-              <table><thead><tr>{% for column in quality.columns %}<th>{{ column }}</th>{% endfor %}</tr></thead>
-                <tbody>{% for row in quality.rows %}<tr>{% for cell in row %}<td>{{ cell }}</td>{% endfor %}</tr>{% endfor %}</tbody>
-              </table>
+            <div class="weight-row lambda-row">
+              <div class="weight-head">
+                <span>λ phạt chi phí</span>
+                <output>{{ "%.1f"|format(cost_penalty_lambda) }}</output>
+              </div>
+              <input type="range" min="0" max="2" step="0.1" name="cost_penalty_lambda" value="{{ cost_penalty_lambda }}"
+                     oninput="this.closest('.weight-row').querySelector('output').value=Number(this.value).toFixed(1)">
             </div>
-          {% else %}<p class="muted">Chưa có bản ghi sự cố (chưa chạy bộ thu thập).</p>{% endif %}
-          {% if flag_counts %}<p>Cờ trên các snapshot đã lưu: {{ flag_counts }}</p>{% endif %}
-          <h3>Trạng thái bộ thu thập</h3>
-          <pre>{{ collector_status }}</pre>
-        </section>
+            <p class="weight-note">Yếu tố có trọng số 0 sẽ bị tắt. Múi giờ {{ timezone }} (UTC+7).</p>
+          </div>
+        </details>
+      </div>
 
-        <section class="panel" id="method">
-          <h2>Phương pháp & giới hạn</h2>
-          <p><strong>Cách tính tóm tắt.</strong> Xem công thức chi tiết trong <code>docs/METHODS.md</code>.</p>
-          <ol>
-            <li><strong>Bộ lọc cứng:</strong> loại mã thiếu chào mua/bán, khóa trần/sàn, dữ liệu cũ, vốn vượt {{ "%.0f"|format(max_participation * 100) }}% GTGD trung bình ngày, chi phí vòng P90 vượt ngưỡng, hoặc lệnh thường vượt độ sâu 3 mức.</li>
-            <li><strong>Điểm yếu tố:</strong> trung bình có trọng số của các yếu tố đã chuẩn hóa chéo mã (z-score, winsorize). Trọng số là tiên nghiệm, chưa tối ưu trên dữ liệu.</li>
-            <li><strong>Chi phí thực thi:</strong> duyệt sổ lệnh 3 mức với vốn đã nhập (trượt giá so với giá giữa) + phí + thuế, lấy P50/P90 trong cửa sổ {{ lookback_minutes }} phút.</li>
-            <li><strong>Điểm ròng:</strong> z(điểm yếu tố) − λ·z(chi phí P90), λ = {{ cost_penalty }}.</li>
-          </ol>
-          <p><strong>Giới hạn:</strong> chỉ thấy 3 mức giá, không thấy lệnh ẩn; không tính tác động của chính lệnh lên giá; vốn vượt độ sâu được gắn cờ thay vì ngoại suy; mẫu forward-test nhỏ nên không kết luận thống kê; phí/giờ giao dịch cần đối chiếu quy định hiện hành; dữ liệu có thể trễ so với sàn.</p>
-          <p>{{ disclaimer }}</p>
-        </section>
+      <button type="submit" name="action" value="refresh" class="btn-update">
+        <svg fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99"/></svg>
+        Cập nhật phân tích
+      </button>
+
+      {% if nl_preview %}
+        <details class="nl-preview">
+          <summary>
+            <span>Bản dịch tham số từ yêu cầu nhanh</span>
+            <svg class="chev" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m6 9 6 6 6-6"/></svg>
+          </summary>
+          <pre>{{ nl_preview }}</pre>
+        </details>
       {% endif %}
-    {% endif %}
-    <footer>ExecScreen · Ứng dụng web FastAPI · Cơ sở dữ liệu: {{ db_path | default("") }}</footer>
-  </main>
-  <script>
-    for (const payload of document.querySelectorAll("script[data-chart]")) {
+    </form>
+
+    <!-- ===================== STATUS ===================== -->
+    <div class="status-card">
+      <div class="status-top">
+        <span>Trạng thái dữ liệu</span>
+        {% if not no_ranked %}
+          {% if is_mock %}
+            <span class="badge badge-red">MOCK</span>
+          {% else %}
+            <span class="badge badge-green"><span class="live-dot"></span>LIVE</span>
+          {% endif %}
+        {% else %}
+          <span class="badge badge-slate">NO DATA</span>
+        {% endif %}
+      </div>
+      {% if not no_ranked %}
+        <p class="status-time">{{ updated_at }}</p>
+        <p class="status-sub">Cập nhật lần cuối · UTC+7</p>
+        <p class="status-sub">Nguồn: <span class="font-mono">{{ sources_text }}</span></p>
+        <div class="status-divider"></div>
+        <p class="status-sub">
+          {% if forward_results %}Đã chốt {{ forward_results|length }} kỳ forward-test{% else %}Chưa chốt danh sách forward-test{% endif %}
+        </p>
+      {% else %}
+        <p class="status-sub">Chưa có lát cắt dữ liệu tại thời điểm đã chọn.</p>
+      {% endif %}
+    </div>
+
+    <div class="sidephoto" role="img" aria-label="Minh họa dữ liệu tài chính"></div>
+    <p class="side-disclaimer">{{ disclaimer }}</p>
+  </aside>
+
+  <!-- ===================== MAIN ===================== -->
+  <div class="app-main">
+    <div class="mobile-bar">
+      <button type="button" id="sidebar-toggle" class="mobile-toggle" aria-label="Mở thanh điều khiển" aria-controls="app-sidebar" aria-expanded="false">
+        <svg fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5M3.75 17.25h16.5"/></svg>
+      </button>
+      <div class="mobile-brand">
+        <div class="brand-logo">ES</div>
+        <p>ExecScreen</p>
+      </div>
+      {% if not no_ranked %}
+        {% if is_mock %}
+          <span class="badge badge-red" style="margin-left:auto">MOCK</span>
+        {% else %}
+          <span class="badge badge-green" style="margin-left:auto"><span class="live-dot"></span>LIVE</span>
+        {% endif %}
+      {% endif %}
+    </div>
+
+    <main class="app-content">
+      <!-- HERO -->
+      <section class="hero" aria-label="Tổng quan ExecScreen">
+        <div class="hero-body">
+          <p class="hero-eyebrow"><span class="hero-dot"></span> Bảng điều khiển thực thi · <span id="hero-tab-label">{{ tabs[0][1] }}</span></p>
+          <h1 class="hero-title">Bộ lọc cổ phiếu <span class="accent">theo quy mô vốn</span></h1>
+          <p class="hero-sub">{{ subtitle | default("Công cụ phân tích học thuật cho dữ liệu chứng khoán và chi phí thực thi.") }}</p>
+          <div class="hero-chips">
+            <span class="hero-chip">Ngày <b>{{ selected_date }}</b></span>
+            <span class="hero-chip">Giờ <b>{{ selected_time }}</b> UTC+7</span>
+            <span class="hero-chip">Vốn <b>{{ "%.0f"|format(capital_m) }}</b> triệu</span>
+            {% if not no_ranked and updated_at %}
+              <span class="hero-chip">Cập nhật <b>{{ updated_at }}</b></span>
+            {% endif %}
+          </div>
+        </div>
+      </section>
+
+      {% if message %}
+        <div class="notice" style="margin-top:14px">
+          <svg fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z"/></svg>
+          <span>{{ message }}</span>
+        </div>
+      {% endif %}
+      {% if error %}
+        <div class="notice notice-error" style="margin-top:14px">{{ error }}</div>
+      {% endif %}
+
+      {% if no_ranked %}
+        <section class="panel no-data-panel">
+          <div class="no-data-icon">
+            <svg fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z"/></svg>
+          </div>
+          <div>
+            <h2>Không có dữ liệu tại thời điểm đã chọn</h2>
+            <p>Không có dữ liệu tại thời điểm đã chọn (có thể trước giờ mở cửa hoặc chưa có snapshot).</p>
+            <p class="no-data-meta">{{ selected_date }} · {{ selected_time }} (UTC+7) · vốn {{ "%.0f"|format(capital_m) }} triệu VND</p>
+          </div>
+        </section>
+      {% else %}
+
+        {% if is_mock %}
+          <div class="mock-banner" style="margin-top:16px">
+            <svg fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z"/></svg>
+            <div style="min-width:0">
+              <p class="mock-title">DỮ LIỆU MÔ PHỎNG (source=mock)</p>
+              <p class="mock-sub">Chỉ dùng để thử giao diện — KHÔNG phải dữ liệu thị trường thật. Cập nhật gần nhất {{ updated_at }} theo giờ VN (UTC+7).</p>
+            </div>
+            <span class="mock-tag">MOCK</span>
+          </div>
+        {% else %}
+          <div class="live-banner" style="margin-top:16px">
+            <span class="live-dot"></span>
+            <span style="font-weight:700;color:#0c8f72">LIVE · Nguồn {{ sources_text }}</span>
+            <span style="font-size:11.5px;color:#5b8f7f">Cập nhật gần nhất <span class="font-mono">{{ updated_at }}</span> theo giờ VN (UTC+7).</span>
+          </div>
+        {% endif %}
+
+        <!-- ============ RANKING ============ -->
+        <div id="panel-ranking" data-tab-panel="ranking" class="tab-panel">
+          <section class="kpi-section" aria-label="Tổng quan phiên">
+            <div class="section-head">
+              <p class="section-title">Tổng quan phiên</p>
+              <p class="section-meta">
+                Ngày <b>{{ selected_date }}</b> · <b>{{ selected_time }}</b> UTC+7 ·
+                Vốn <b>{{ "%.0f"|format(capital_m) }}</b> triệu VND
+              </p>
+            </div>
+            <div class="kpi-grid">
+              <div class="kpi kpi-blue">
+                <div class="kpi-label">
+                  <span>Mã đủ điều kiện</span>
+                  <span class="kpi-icon"><svg fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg></span>
+                </div>
+                <p class="kpi-value">{{ eligible_count }}<span class="of">/{{ ranked_count }}</span></p>
+                <p class="kpi-foot">đã qua bộ lọc cứng</p>
+              </div>
+              <div class="kpi kpi-mint">
+                <div class="kpi-label">
+                  <span>Chi phí vòng P50</span>
+                  <span class="kpi-icon"><svg fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 6 9 12.75l4.286-4.286a11.948 11.948 0 0 1 4.214 6.843L18.75 21"/></svg></span>
+                </div>
+                <p class="kpi-value">{{ median_cost }}<span class="unit">bps</span></p>
+                <p class="kpi-foot">trung vị trên mã đủ điều kiện</p>
+              </div>
+              <div class="kpi kpi-rose">
+                <div class="kpi-label">
+                  <span>Vượt độ sâu 3 mức</span>
+                  <span class="kpi-icon"><svg fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 4.5h14.25M3 9h9.75M3 13.5h5.25m5.25-.75L17.25 9m0 0L21 12.75M17.25 9v12"/></svg></span>
+                </div>
+                <p class="kpi-value">{{ beyond_count }}</p>
+                <p class="kpi-foot">mã bị loại vì độ sâu</p>
+              </div>
+              <div class="kpi kpi-lilac">
+                <div class="kpi-label">
+                  <span>Độ rộng thị trường</span>
+                  <span class="kpi-icon"><svg fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75ZM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V8.625ZM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V4.125Z"/></svg></span>
+                </div>
+                <p class="kpi-value">{{ market_breadth }}</p>
+                <p class="kpi-foot">tăng / giảm trong phiên</p>
+              </div>
+              <div class="kpi kpi-peach">
+                <div class="kpi-label">
+                  <span>Tuổi dữ liệu</span>
+                  <span class="kpi-icon"><svg fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg></span>
+                </div>
+                <p class="kpi-value">{{ age_text }}</p>
+                <p class="kpi-foot">so với hiện tại</p>
+              </div>
+              {% set conn = collector_status.get('connected') %}
+              <div class="kpi kpi-sky">
+                <div class="kpi-label">
+                  <span>Kết nối thu thập</span>
+                  <span class="kpi-icon"><svg fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M8.288 15.038a5.25 5.25 0 0 1 7.424 0M5.106 11.856c3.807-3.808 9.98-3.808 13.788 0M1.924 8.674c5.565-5.565 14.587-5.565 20.152 0M12.53 18.22l-.53.53-.53-.53a.75.75 0 0 1 1.06 0Z"/></svg></span>
+                </div>
+                <p class="kpi-value kpi-value-sm">
+                  <span class="conn-dot {{ 'is-on' if conn == 'true' else ('is-off' if conn == 'false' else 'is-unknown') }}"></span>
+                  {{ connection_text }}
+                </p>
+                <p class="kpi-foot">nguồn {{ sources_text }}</p>
+              </div>
+            </div>
+            <p class="kpi-note">
+              Ngưỡng chi phí P90: <b>{{ threshold }} bps</b> · {{ calibration_text }} ·
+              Dữ liệu cập nhật <b>{{ updated_at }}</b> (UTC+7)
+            </p>
+          </section>
+
+          <section id="ranking" class="panel">
+            <div class="panel-head">
+              <div>
+                <h2 class="panel-title">Xếp hạng cổ phiếu</h2>
+                <p class="panel-sub">Sắp xếp theo điểm ròng sau khi trừ chi phí thực thi ở đúng quy mô vốn.</p>
+              </div>
+              <div class="panel-badges">
+                <span class="badge badge-slate">{{ ranked_count }} mã</span>
+                <span class="badge badge-green">{{ eligible_count }} đủ điều kiện</span>
+              </div>
+            </div>
+
+            <div class="toolbar">
+              <label class="tool-toggle">
+                <input form="controls" type="checkbox" name="show_out" {% if show_out %}checked{% endif %} onchange="this.form.requestSubmit()">
+                Hiện cả mã bị loại (kèm lý do)
+              </label>
+              <div class="search-wrap">
+                <svg fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m21 21-4.35-4.35M17 10.5a6.5 6.5 0 1 1-13 0 6.5 6.5 0 0 1 13 0Z"/></svg>
+                <input id="symbol-search" type="text" placeholder="Tìm mã nhanh…" autocomplete="off" class="field">
+              </div>
+              <button type="button" id="symbol-all" class="btn-ghost">Chọn tất cả</button>
+              <button type="button" id="symbol-none" class="btn-ghost">Bỏ chọn</button>
+              <span id="symbol-count" class="symbol-count">Đang chọn 0</span>
+              <button form="controls" type="submit" name="action" value="refresh" class="btn-dark ml-auto">Áp dụng bộ lọc mã</button>
+            </div>
+
+            <div id="symbol-list" class="symbol-grid">
+              {% for symbol in ranked_symbols %}
+                <label data-symbol="{{ symbol }}" class="symbol-option">
+                  <input form="controls" type="checkbox" name="symbols" value="{{ symbol }}" {% if symbol in selected_symbols %}checked{% endif %}>
+                  <span>{{ symbol }}</span>
+                </label>
+              {% endfor %}
+            </div>
+            <p id="symbol-empty" class="hint hidden">Không có mã khớp từ khóa.</p>
+            <p class="hint">Để trống = xem tất cả mã. Lựa chọn được gửi cùng form tham số ở thanh bên.</p>
+
+            <div class="table-shell">
+              <div class="table-scroll">
+                <table class="w-full text-[12.5px]">
+                  <thead>
+                    <tr>
+                      {% for column in ranking_table.columns %}
+                        <th scope="col" title="{{ COL_HINTS.get(column, column) }}"
+                            class="whitespace-nowrap px-3 py-2.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-slate-500 {% if column == 'Hạng' %}w-14 text-center{% elif column in NUMERIC_COLS %}text-right{% else %}text-left{% endif %}">
+                          {{ column }}
+                        </th>
+                      {% endfor %}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for row in ranking_table.rows %}
+                      {% set reason = row[-1] %}
+                      {% set eliminated = reason and reason != '-' %}
+                      <tr class="{% if eliminated %}row-out{% endif %}">
+                        {% for cell in row %}
+                          {% set column = ranking_table.columns[loop.index0] %}
+                          {% if column == 'Mã' %}
+                            <td class="whitespace-nowrap px-3 py-2">
+                              <button type="button" data-symbol="{{ cell }}" class="symbol-jump">{{ cell }}</button>
+                            </td>
+                          {% elif column == 'Hạng' %}
+                            <td class="whitespace-nowrap px-3 py-2 text-center">
+                              {% if cell != '-' and cell|int(0) <= 3 %}
+                                <span class="rank-pill">{{ cell|replace('.00', '') }}</span>
+                              {% else %}
+                                <span class="font-mono text-[11.5px] text-slate-400">{{ cell|replace('.00', '') }}</span>
+                              {% endif %}
+                            </td>
+                          {% elif column == 'Điểm 0-100' %}
+                            <td class="whitespace-nowrap px-3 py-2 text-right">
+                              {% if cell and cell != '-' %}
+                                {% set score_value = cell|float(0) %}
+                                {% set tone = 'score-high' if score_value >= 70 else ('score-mid' if score_value >= 55 else ('score-low' if score_value >= 40 else 'score-weak')) %}
+                                <span class="score-pill {{ tone }}">{{ cell }}</span>
+                              {% else %}
+                                <span class="font-mono text-slate-400">—</span>
+                              {% endif %}
+                            </td>
+                          {% elif column == 'Lý do loại' %}
+                            <td class="reason-cell whitespace-nowrap px-3 py-2">
+                              {% if eliminated %}
+                                <span class="reason-pill" title="{{ reason }}">{{ reason }}</span>
+                              {% else %}
+                                <span class="text-slate-300">—</span>
+                              {% endif %}
+                            </td>
+                          {% else %}
+                            <td class="num whitespace-nowrap px-3 py-2 text-right font-mono text-[12px] text-slate-600">{{ cell }}</td>
+                          {% endif %}
+                        {% endfor %}
+                      </tr>
+                    {% else %}
+                      <tr>
+                        <td colspan="{{ ranking_table.columns|length }}" class="px-4 py-10 text-center text-[12.5px] text-slate-500">Không có mã phù hợp bộ lọc.</td>
+                      </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="chart-card">
+              <div class="chart-card-head">
+                <p>Biên hiệu quả — chi phí vs điểm</p>
+                <p class="chart-hint">Mỗi điểm là một mã · đường nét đứt vàng là biên Pareto</p>
+              </div>
+              <div id="chart-ranking" class="chart w-full"></div>
+              <script type="application/json" data-chart="chart-ranking">{{ ranking_chart | tojson }}</script>
+            </div>
+          </section>
+        </div>
+
+        <!-- ============ DETAILS ============ -->
+        <div id="panel-details" data-tab-panel="details" class="tab-panel" hidden>
+          <section id="details" class="panel">
+            <div class="panel-head">
+              <div>
+                <h2 class="panel-title">Chi tiết mã &amp; mô phỏng duyệt sổ lệnh</h2>
+                <p class="panel-sub">Mô phỏng “ăn” 3 mức sổ lệnh tại snapshot gần nhất trong phiên liên tục.</p>
+              </div>
+              <div class="detail-badge">
+                <span class="detail-symbol">{{ detail.symbol }}</span>
+                {% if detail.eligible %}
+                  <span class="badge badge-green">Đủ điều kiện</span>
+                {% else %}
+                  <span class="badge badge-red">Bị loại</span>
+                {% endif %}
+              </div>
+            </div>
+
+            <div class="detail-controls">
+              <label>
+                <span class="field-label">Chọn mã</span>
+                <select id="detail-symbol" form="controls" name="symbol" class="field font-mono">
+                  {% for symbol in detail_pool %}
+                    <option value="{{ symbol }}" {% if symbol == detail.symbol %}selected{% endif %}>{{ symbol }}</option>
+                  {% endfor %}
+                </select>
+              </label>
+              <label>
+                <span class="field-label">Chiều lệnh minh họa</span>
+                <select form="controls" name="side" class="field">
+                  <option {% if selected_side == "Mua" %}selected{% endif %}>Mua</option>
+                  <option {% if selected_side == "Bán" %}selected{% endif %}>Bán</option>
+                </select>
+              </label>
+              <button form="controls" type="submit" name="action" value="refresh" class="btn-outline">Xem chi tiết</button>
+            </div>
+
+            <div class="callout">
+              <svg fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z"/></svg>
+              <span>{{ detail.explanation }}</span>
+            </div>
+
+            {% if detail.warning %}
+              <div class="callout callout-amber">
+                <svg fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126Z"/></svg>
+                <span>{{ detail.warning }}</span>
+              </div>
+            {% endif %}
+
+            {% if detail.metrics %}
+              <div class="metric-grid">
+                {% for label, value in detail.metrics %}
+                  <div class="metric-card">
+                    <span>{{ label }}</span>
+                    <p>{{ value }}</p>
+                  </div>
+                {% endfor %}
+              </div>
+            {% endif %}
+
+            {% if detail.charts.contribution %}
+              <div class="chart-card">
+                <div id="chart-contribution" class="chart w-full"></div>
+                <script type="application/json" data-chart="chart-contribution">{{ detail.charts.contribution | tojson }}</script>
+              </div>
+            {% endif %}
+            {% if detail.charts.depth %}
+              <div class="chart-pair">
+                <div class="chart-card">
+                  <div id="chart-depth" class="chart w-full"></div>
+                  <script type="application/json" data-chart="chart-depth">{{ detail.charts.depth | tojson }}</script>
+                </div>
+                <div class="chart-card">
+                  <div id="chart-cost" class="chart w-full"></div>
+                  <script type="application/json" data-chart="chart-cost">{{ detail.charts.cost | tojson }}</script>
+                </div>
+              </div>
+            {% endif %}
+          </section>
+        </div>
+
+        <!-- ============ FORWARD TEST ============ -->
+        <div id="panel-forward-test" data-tab-panel="forward-test" class="tab-panel" hidden>
+          <section id="forward-test" class="panel">
+            <div class="panel-head">
+              <div>
+                <h2 class="panel-title">Forward-test giả lập</h2>
+                <p class="panel-sub">Chốt danh sách tại thời điểm đang chọn rồi đánh giá bằng giá vào/ra lấy từ sổ lệnh ở các phiên sau.</p>
+              </div>
+              <span class="badge badge-amber">Không đặt lệnh thật</span>
+            </div>
+
+            <div class="info-grid">
+              <div class="info-card">
+                <span class="k">Cơ chế</span>
+                <p>Đã trừ phí mua/bán và thuế bán. <strong>Không đặt lệnh thật.</strong> Danh sách chốt là bất biến sau khi tạo.</p>
+              </div>
+              <div class="info-card">
+                <span class="k">Hiệu chỉnh ngưỡng</span>
+                <p>Phiên hiệu chỉnh: <span class="font-mono">{{ calibration_dates }}</span>. Các phiên sau dùng ngưỡng đã cố định.</p>
+              </div>
+            </div>
+
+            <div class="freeze-row">
+              <button form="controls" type="submit" name="action" value="freeze" {% if eligible_count == 0 %}disabled{% endif %} class="btn-primary">
+                <svg fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z"/></svg>
+                Chốt danh sách tại thời điểm đang chọn
+              </button>
+              {% if eligible_count == 0 %}<span style="font-size:11px;color:#9db1c6">Cần ít nhất một mã đủ điều kiện để chốt.</span>{% endif %}
+            </div>
+
+            {% if not forward_results %}
+              <div class="empty-hint">
+                Chưa có lần chốt nào. Có thể dùng <code>scripts/freeze_picks.py</code> để chốt mỗi phiên tại giờ cố định.
+              </div>
+            {% else %}
+              <div style="margin-top:14px">
+                {% for result in forward_results %}
+                  <div class="run-card">
+                    <div class="run-head">
+                      <span class="run-id">{{ result.run_id }}</span>
+                      <span class="badge {{ 'badge-green' if result.status == 'OK' else 'badge-amber' }}">{{ result.status }}</span>
+                    </div>
+                    {% if result.reason %}<p style="margin:6px 0 0;font-size:12px;color:#b67a17">{{ result.reason }}</p>{% endif %}
+                    {% if result.status == "OK" %}
+                      <div class="run-metrics">
+                        <div class="mini-stat">
+                          <span>Lợi suất ròng TB (top-N)</span>
+                          <p class="{{ 'pos' if result.mean_net_pick >= 0 else 'neg' }}">{{ "%.2f"|format(result.mean_net_pick * 100) }}%</p>
+                        </div>
+                        <div class="mini-stat">
+                          <span>Vượt trội vs mọi mã đủ điều kiện</span>
+                          <p class="{{ 'pos' if result.excess_vs_eligible >= 0 else 'neg' }}">{{ "%.2f"|format(result.excess_vs_eligible * 100) }}%</p>
+                        </div>
+                        <div class="mini-stat">
+                          <span>IC hạng</span>
+                          <p>{{ "%.2f"|format(result.rank_ic) }}</p>
+                        </div>
+                        <div class="mini-stat">
+                          <span>Hạng phần trăm vs chọn ngẫu nhiên</span>
+                          <p>{{ "%.0f"|format(result.random_pctile * 100) }}</p>
+                        </div>
+                      </div>
+                      <div id="chart-forward-{{ loop.index }}" class="chart mt-2 w-full"></div>
+                      <script type="application/json" data-chart="chart-forward-{{ loop.index }}">{{ result.chart | tojson }}</script>
+                    {% endif %}
+                  </div>
+                {% endfor %}
+              </div>
+            {% endif %}
+
+            {% if summary.get("n_runs") %}
+              <div class="summary-card">
+                <h3>Tổng hợp nhiều lần chốt</h3>
+                <div class="summary-grid">
+                  <div>
+                    <span>Số lần chốt đã đánh giá</span>
+                    <p>{{ summary.n_runs }}</p>
+                  </div>
+                  <div>
+                    <span>Vượt trội TB</span>
+                    <p class="{{ 'pos' if summary.mean_excess >= 0 else 'neg' }}">{{ "%.2f"|format(summary.mean_excess * 100) }}%</p>
+                  </div>
+                  <div>
+                    <span>Khoảng tin cậy 95% (bootstrap)</span>
+                    <p>[{{ "%.2f"|format(summary.ci95[0] * 100) }}%, {{ "%.2f"|format(summary.ci95[1] * 100) }}%]</p>
+                  </div>
+                </div>
+                <div class="caveat">{{ summary.caveat }}</div>
+              </div>
+            {% endif %}
+          </section>
+        </div>
+
+        <!-- ============ QUALITY ============ -->
+        <div id="panel-quality" data-tab-panel="quality" class="tab-panel" hidden>
+          <section id="quality" class="panel">
+            <div class="panel-head">
+              <div>
+                <h2 class="panel-title">Chất lượng dữ liệu</h2>
+                <p class="panel-sub">Phủ dữ liệu, sự cố ghi nhận và nhịp tim của bộ thu thập.</p>
+              </div>
+              <span class="badge badge-slate">Nguồn: {{ sources_text }}</span>
+            </div>
+
+            <div class="quality-grid">
+              <div>
+                <h3 class="subhead">Phủ dữ liệu theo ngày</h3>
+                <div class="table-shell small">
+                  <div class="table-scroll">
+                    <table class="w-full text-[12px]">
+                      <thead>
+                        <tr>
+                          {% for column in coverage.columns %}
+                            <th scope="col" class="whitespace-nowrap px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.08em] text-slate-500 {% if column in ['rows', 'symbols'] %}text-right{% else %}text-left{% endif %}">{{ COVERAGE_LABELS.get(column, column) }}</th>
+                          {% endfor %}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {% for row in coverage.rows %}
+                          <tr>
+                            {% for cell in row %}
+                              {% set column = coverage.columns[loop.index0] %}
+                              <td class="whitespace-nowrap px-3 py-2 {% if column in ['rows', 'symbols'] %}num text-right font-mono text-slate-700{% else %}font-mono text-slate-500{% endif %}">{{ cell }}</td>
+                            {% endfor %}
+                          </tr>
+                        {% else %}
+                          <tr><td colspan="{{ coverage.columns|length }}" class="px-3 py-8 text-center text-slate-400">Chưa có dữ liệu phủ.</td></tr>
+                        {% endfor %}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <h3 class="subhead">Sự cố chất lượng đã ghi nhận</h3>
+                {% if quality.rows %}
+                  <div class="table-shell small">
+                    <div class="table-scroll">
+                      <table class="w-full text-[12px]">
+                        <thead>
+                          <tr>
+                            {% for column in quality.columns %}
+                              <th scope="col" class="whitespace-nowrap px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.08em] text-slate-500 {% if column == 'n' %}text-right{% else %}text-left{% endif %}">{{ QUALITY_LABELS.get(column, column) }}</th>
+                            {% endfor %}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {% for row in quality.rows %}
+                            <tr>
+                              {% for cell in row %}
+                                {% set column = quality.columns[loop.index0] %}
+                                {% if column == 'issue' %}
+                                  <td class="whitespace-nowrap px-3 py-2">
+                                    <span class="badge badge-amber" title="{{ cell }}">{{ ISSUE_LABELS.get(cell, cell) }}</span>
+                                  </td>
+                                {% elif column == 'n' %}
+                                  <td class="num whitespace-nowrap px-3 py-2 text-right font-mono font-semibold text-slate-700">{{ cell }}</td>
+                                {% else %}
+                                  <td class="whitespace-nowrap px-3 py-2 font-mono text-slate-500">{{ cell }}</td>
+                                {% endif %}
+                              {% endfor %}
+                            </tr>
+                          {% endfor %}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                {% else %}
+                  <div class="empty-hint" style="margin-top:0">Chưa có bản ghi sự cố (chưa chạy bộ thu thập).</div>
+                {% endif %}
+              </div>
+            </div>
+
+            <div style="margin-top:16px">
+              <h3 class="subhead">Cờ trên các snapshot đã lưu</h3>
+              {% if flag_counts %}
+                <div class="flag-list">
+                  {% for flag, count in flag_counts.items() %}
+                    {% if flag %}
+                      <span class="flag-pill" title="{{ flag }}">
+                        <span>{{ FLAG_LABELS.get(flag, flag) }}</span>
+                        <b>{{ count }}</b>
+                      </span>
+                    {% endif %}
+                  {% endfor %}
+                </div>
+              {% else %}
+                <p style="margin:0;font-size:12px;color:#9db1c6">Không có cờ nào trên dữ liệu hiện tại.</p>
+              {% endif %}
+            </div>
+
+            <div style="margin-top:16px">
+              <h3 class="subhead">Trạng thái bộ thu thập</h3>
+              {% if collector_status %}
+                <div class="collector-grid">
+                  {% for key, value in collector_status.items() %}
+                    <div class="collector-card">
+                      <span class="k">{{ STATUS_LABELS.get(key, key) }}</span>
+                      {% if key == 'connected' %}
+                        <span class="badge mt-1.5 {{ 'badge-green' if value == 'true' else 'badge-red' }}">{{ 'Đang nhận tin' if value == 'true' else 'Đã dừng' }}</span>
+                      {% elif key == 'last_error' %}
+                        <span class="v is-err" title="{{ value }}">{{ value }}</span>
+                      {% else %}
+                        <span class="v" title="{{ value }}">{{ value }}</span>
+                      {% endif %}
+                    </div>
+                  {% endfor %}
+                </div>
+              {% else %}
+                <p style="margin:0;font-size:12px;color:#9db1c6">Chưa có nhịp tim của bộ thu thập (chưa chạy collector).</p>
+              {% endif %}
+            </div>
+          </section>
+        </div>
+
+        <!-- ============ METHOD ============ -->
+        <div id="panel-method" data-tab-panel="method" class="tab-panel" hidden>
+          <section id="method" class="panel">
+            <div class="panel-head">
+              <div>
+                <h2 class="panel-title">Phương pháp &amp; giới hạn</h2>
+                <p class="panel-sub">Công thức rút gọn; chi tiết đầy đủ trong <code style="border-radius:6px;background:#f2f8ff;padding:2px 6px;font-family:'JetBrains Mono',monospace;font-size:10.5px;color:#54708e">docs/METHODS.md</code>.</p>
+              </div>
+              <span class="badge badge-slate">Học thuật</span>
+            </div>
+
+            <div class="method-grid">
+              <div class="method-card">
+                <div class="method-head"><span class="step-badge">1</span><h3>Bộ lọc cứng</h3></div>
+                <p>Loại mã không đạt bất kỳ điều kiện nào sau đây:</p>
+                <div class="gate-chips">
+                  {% for gate in ['Chào mua/bán hợp lệ', 'Không khóa trần/sàn', 'Không dữ liệu cũ', 'Chi phí P90 ≤ ngưỡng', 'Không vượt độ sâu 3 mức'] %}
+                    <span class="gate-chip">{{ gate }}</span>
+                  {% endfor %}
+                  <span class="gate-chip font-mono">vốn ≤ {{ "%.0f"|format(max_participation * 100) }}% GTGD TB/ngày</span>
+                </div>
+              </div>
+              <div class="method-card">
+                <div class="method-head"><span class="step-badge">2</span><h3>Điểm yếu tố</h3></div>
+                <p>Trung bình có trọng số của các yếu tố đã chuẩn hóa chéo mã (z-score, winsorize). Trọng số là tiên nghiệm, chưa tối ưu trên dữ liệu.</p>
+                <div class="formula">comp = Σ wᵢ · z_win(fᵢ) / Σ wᵢ</div>
+              </div>
+              <div class="method-card">
+                <div class="method-head"><span class="step-badge">3</span><h3>Chi phí thực thi</h3></div>
+                <p>Duyệt sổ lệnh 3 mức với vốn đã nhập (trượt giá so với giá giữa) + phí + thuế, lấy P50/P90 trong cửa sổ {{ lookback_minutes }} phút.</p>
+                <div class="formula">cost_bps = slippage + phí + thuế</div>
+              </div>
+              <div class="method-card">
+                <div class="method-head"><span class="step-badge">4</span><h3>Điểm ròng</h3></div>
+                <p>Phạt chi phí bằng z-score của chi phí P90 trên rổ mã, rồi sắp xếp giảm dần.</p>
+                <div class="formula">net = z(comp) − λ · z(cost_p90), λ = {{ cost_penalty }}</div>
+              </div>
+            </div>
+
+            <div class="limits-card">
+              <p class="k">Giới hạn</p>
+              <p>
+                Chỉ thấy 3 mức giá, không thấy lệnh ẩn; không tính tác động của chính lệnh lên giá; vốn vượt độ sâu được gắn cờ thay vì ngoại suy;
+                mẫu forward-test nhỏ nên không kết luận thống kê; phí/giờ giao dịch cần đối chiếu quy định hiện hành; dữ liệu có thể trễ so với sàn.
+              </p>
+            </div>
+
+            <p class="method-note">{{ disclaimer }}</p>
+          </section>
+        </div>
+      {% endif %}
+
+      <footer class="page-footer">
+        <b>ExecScreen</b> · Ứng dụng web FastAPI · Cơ sở dữ liệu:
+        <span class="font-mono">{{ db_path | default("") }}</span>
+      </footer>
+    </main>
+  </div>
+{% endif %}
+
+<script>
+(function () {
+  "use strict";
+
+  const body = document.body;
+
+  // ---- Plotly: render + responsive theo khung chứa ----
+  const plotConfig = {
+    responsive: true,
+    displaylogo: false,
+    displayModeBar: false,
+    scrollZoom: false
+  };
+  const renderCharts = function (panel) {
+    if (!window.Plotly || !panel) return;
+    for (const payload of panel.querySelectorAll("script[data-chart]")) {
       const target = document.getElementById(payload.dataset.chart);
-      if (target && window.Plotly) {
+      if (!target || target.data) continue;
+      try {
         const figure = JSON.parse(payload.textContent);
-        Plotly.newPlot(target, figure.data, figure.layout, {responsive: true, displaylogo: false});
+        Plotly.newPlot(target, figure.data, figure.layout, plotConfig);
+      } catch (err) {
+        console.error("Không dựng được biểu đồ", payload.dataset.chart, err);
       }
     }
-  </script>
+  };
+  if (window.ResizeObserver && window.Plotly) {
+    for (const el of document.querySelectorAll(".chart")) {
+      new ResizeObserver(function () {
+        if (el.data && el.clientWidth > 0 && el.clientHeight > 0) Plotly.Plots.resize(el);
+      }).observe(el);
+    }
+  }
+
+  // ---- Sidebar mobile ----
+  const toggle = document.getElementById("sidebar-toggle");
+  const overlay = document.getElementById("sidebar-overlay");
+  const openSidebar = function () {
+    body.classList.add("sidebar-open");
+    if (toggle) toggle.setAttribute("aria-expanded", "true");
+  };
+  const closeSidebar = function () {
+    body.classList.remove("sidebar-open");
+    if (toggle) toggle.setAttribute("aria-expanded", "false");
+  };
+  if (toggle) toggle.addEventListener("click", openSidebar);
+  if (overlay) overlay.addEventListener("click", closeSidebar);
+  document.addEventListener("keydown", function (event) {
+    if (event.key === "Escape") closeSidebar();
+  });
+
+  // ---- Preset vốn ----
+  const capitalChips = Array.from(document.querySelectorAll(".capital-chip"));
+  const markCapital = function (chip) {
+    for (const other of capitalChips) other.classList.toggle("is-on", other === chip);
+  };
+  for (const chip of capitalChips) {
+    chip.addEventListener("click", function () {
+      const input = document.getElementById("capital-input");
+      if (input) input.value = chip.dataset.capital;
+      markCapital(chip);
+    });
+  }
+  const capitalInput = document.getElementById("capital-input");
+  if (capitalInput) {
+    const preset = capitalChips.find(function (chip) { return chip.dataset.capital === capitalInput.value; });
+    if (preset) markCapital(preset);
+  }
+
+  // ---- Lọc mã nhanh + đếm lựa chọn ----
+  const search = document.getElementById("symbol-search");
+  const list = document.getElementById("symbol-list");
+  if (list) {
+    const options = Array.from(list.querySelectorAll(".symbol-option"));
+    const boxes = function () { return Array.from(list.querySelectorAll('input[name="symbols"]')); };
+    const counter = document.getElementById("symbol-count");
+    const emptyHint = document.getElementById("symbol-empty");
+    const updateCount = function () {
+      if (!counter) return;
+      const n = boxes().filter(function (b) { return b.checked; }).length;
+      counter.textContent = "Đang chọn " + n;
+    };
+    const applyFilter = function () {
+      const q = (search && search.value ? search.value : "").trim().toUpperCase();
+      let visible = 0;
+      for (const opt of options) {
+        const hit = !q || opt.dataset.symbol.indexOf(q) !== -1;
+        opt.classList.toggle("hidden", !hit);
+        if (hit) visible += 1;
+      }
+      if (emptyHint) emptyHint.classList.toggle("hidden", visible !== 0);
+    };
+    if (search) search.addEventListener("input", applyFilter);
+    list.addEventListener("change", updateCount);
+    const allBtn = document.getElementById("symbol-all");
+    if (allBtn) allBtn.addEventListener("click", function () {
+      for (const opt of options) {
+        if (!opt.classList.contains("hidden")) {
+          const box = opt.querySelector('input[name="symbols"]');
+          if (box) box.checked = true;
+        }
+      }
+      updateCount();
+    });
+    const noneBtn = document.getElementById("symbol-none");
+    if (noneBtn) noneBtn.addEventListener("click", function () {
+      for (const box of boxes()) box.checked = false;
+      updateCount();
+    });
+    updateCount();
+  }
+
+  // ---- Bấm mã trong bảng -> mở tab Chi tiết mã ----
+  document.addEventListener("click", function (event) {
+    const btn = event.target.closest(".symbol-jump");
+    if (!btn) return;
+    const select = document.getElementById("detail-symbol");
+    if (select) select.value = btn.dataset.symbol;
+    try { sessionStorage.setItem("execscreen:tab", "details"); } catch (err) {}
+    const form = document.getElementById("controls");
+    if (form) form.requestSubmit();
+  });
+
+  // ---- Tab điều hướng nội dung ----
+  const tabLinks = Array.from(document.querySelectorAll("[data-tab-target]"));
+  const panels = Array.from(document.querySelectorAll("[data-tab-panel]"));
+  const tabIds = new Set(tabLinks.map(function (link) { return link.dataset.tabTarget; }));
+  const panelFor = function (id) {
+    return panels.find(function (panel) { return panel.dataset.tabPanel === id; }) || null;
+  };
+  const setActive = function (id) {
+    for (const link of tabLinks) {
+      const on = link.dataset.tabTarget === id;
+      link.classList.toggle("tab-active", on);
+      if (on) link.setAttribute("aria-current", "page");
+      else link.removeAttribute("aria-current");
+    }
+  };
+  const activate = function (id, opts) {
+    if (!tabIds.has(id)) id = tabLinks.length ? tabLinks[0].dataset.tabTarget : "ranking";
+    for (const panel of panels) panel.hidden = panel.dataset.tabPanel !== id;
+    body.dataset.tab = id;
+    setActive(id);
+    const current = tabLinks.find(function (link) { return link.dataset.tabTarget === id; });
+    const heroLabel = document.getElementById("hero-tab-label");
+    if (heroLabel && current) heroLabel.textContent = current.dataset.tabLabel || "";
+    const panel = panelFor(id);
+    renderCharts(panel);
+    if (panel && window.Plotly) {
+      requestAnimationFrame(function () {
+        for (const el of panel.querySelectorAll(".chart")) {
+          if (el.data && el.clientWidth > 0) Plotly.Plots.resize(el);
+        }
+      });
+    }
+    if (!opts || !opts.silent) {
+      try { sessionStorage.setItem("execscreen:tab", id); } catch (err) {}
+      if (location.hash !== "#" + id) history.replaceState(null, "", "#" + id);
+    }
+  };
+  for (const link of tabLinks) {
+    link.addEventListener("click", function (event) {
+      event.preventDefault();
+      activate(this.dataset.tabTarget);
+      closeSidebar();
+      window.scrollTo({ top: 0, behavior: "auto" });
+    });
+  }
+  window.addEventListener("hashchange", function () {
+    activate(location.hash.slice(1), { silent: true });
+  });
+  if (tabLinks.length) {
+    let initial = tabLinks[0].dataset.tabTarget;
+    if (location.hash) initial = location.hash.slice(1);
+    else {
+      try {
+        const saved = sessionStorage.getItem("execscreen:tab");
+        if (saved) initial = saved;
+      } catch (err) {}
+    }
+    activate(initial, { silent: true });
+  }
+})();
+</script>
 </body>
 </html>

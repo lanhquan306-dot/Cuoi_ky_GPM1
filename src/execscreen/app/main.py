@@ -15,6 +15,7 @@ import numpy as np
 import pandas as pd
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import HTMLResponse
+from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
 from execscreen.ai.nl_to_config import apply_overrides, rule_based_parse
@@ -36,7 +37,9 @@ from execscreen.finance.fees import FeeSchedule
 from execscreen.timeutil import TZ_NAME, now_vn
 
 templates = Jinja2Templates(directory=str(Path(__file__).with_name("templates")))
+STATIC_DIR = Path(__file__).with_name("static")
 app = FastAPI(title="ExecScreen", docs_url=None, redoc_url=None, openapi_url=None)
+app.mount("/static", StaticFiles(directory=str(STATIC_DIR), check_dir=False), name="static")
 load_dotenv_if_present()
 
 DISCLAIMER = (
